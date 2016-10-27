@@ -1,0 +1,30 @@
+# Ignore some of the VC++ user-files
+*.csproj.user
+*.sdf
+*.suo
+*.ilk
+*.pdb
+*.exe
+*.lib
+*.docstates
+*.log
+*.ex*
+*.opensdf
+*.psess
+*.vspx
+
+# Ignore the VS build folders
+**/obj/**
+**/bin/**
+.vs/**
+
+# And some system's temp files
+*~
+*.tmp
+*.bak
+*.swp*
+
+# Other artifacts not to track
+packages/**
+*.html
+*.css
