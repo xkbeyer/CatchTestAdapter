@@ -16,6 +16,7 @@ namespace CatchTestAdapter
     {
         public const string ExecutorUriString = "executor://CatchTestRunner/v1";
         public static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
+        private string exe;
 
         public void Cancel()
         {
@@ -28,12 +29,8 @@ namespace CatchTestAdapter
             foreach(var exeName in sources)
             {
                 var tests = TestDiscoverer.CreateTestCases(exeName);
-                foreach (var test in tests)
-                {
-                    frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
-                }
+                RunTests(tests, runContext, frameworkHandle);
             }
-            throw new NotImplementedException("RunTests with sources.");
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
@@ -42,8 +39,16 @@ namespace CatchTestAdapter
             foreach (var test in tests)
             {
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
+                var p = new ProcessRunner(test.Source, "-s -d yes \"" + test.DisplayName + "\"");
+                foreach(var s in p.Output)
+                {
+                    if(s.Length != 0 )
+                        frameworkHandle.SendMessage(TestMessageLevel.Informational, s);
+                }
+                var testResult = new TestResult(test);
+                testResult.Outcome = TestOutcome.Failed;//       (TestOutcome)test.GetPropertyValue(TestResultProperties.Outcome);
+                frameworkHandle.RecordResult(testResult);
             }
-            throw new NotImplementedException("RunTests with TestCases.");
         }
     }
 }
