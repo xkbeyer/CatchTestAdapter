@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace TestAdapter
+namespace CatchTestAdapter
 {
     class ProcessRunner
     {
