@@ -39,14 +39,29 @@ namespace CatchTestAdapter
             foreach (var test in tests)
             {
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
-                var p = new ProcessRunner(test.Source, "-s -d yes \"" + test.DisplayName + "\"");
-                foreach(var s in p.Output)
-                {
-                    if(s.Length != 0 )
-                        frameworkHandle.SendMessage(TestMessageLevel.Informational, s);
-                }
+                var p = new ProcessRunner(test.Source, "-r compact \"" + test.DisplayName + "\"");
+
                 var testResult = new TestResult(test);
-                testResult.Outcome = TestOutcome.Failed;//       (TestOutcome)test.GetPropertyValue(TestResultProperties.Outcome);
+                testResult.Outcome = TestOutcome.Passed;
+                foreach (var s in p.Output)
+                {
+                    if (s.Length != 0)
+                    {
+                        var msg = new TestResultMessage(TestResultMessage.StandardOutCategory, s + "\n");
+                        testResult.Messages.Add(msg);
+                        if( s.Contains("failed:"))
+                        {
+                            string srcline = s.Remove(s.LastIndexOf(": failed:"));
+                            string errtxt = s.Remove(0, s.LastIndexOf("failed:"));
+                            var errmsg = new TestResultMessage(TestResultMessage.StandardErrorCategory, s + "\n");
+                            testResult.Messages.Add(errmsg);
+                            testResult.ErrorMessage += errtxt + "\n";
+                            testResult.ErrorStackTrace += srcline + "\n";
+                            testResult.Outcome = TestOutcome.Failed;
+                        }
+                        frameworkHandle.SendMessage(TestMessageLevel.Informational, s);
+                    }
+                }
                 frameworkHandle.RecordResult(testResult);
             }
         }
