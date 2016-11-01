@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestWindow;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace CatchTestAdapter
@@ -12,15 +11,15 @@ namespace CatchTestAdapter
     [FileExtension(".exe")]
     public class TestDiscoverer : ITestDiscoverer
     {
+
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
         {
             logger.SendMessage(TestMessageLevel.Informational, "Catch Discover in process ...");
-            
             //System.Diagnostics.Debugger.Launch();
             foreach (var src in sources)
             {
-                var found = CreateTestCases(src);
-                foreach (var t in found)
+                var testCases = CreateTestCases(src);
+                foreach (var t in testCases)
                 {
                     discoverySink.SendTestCase(t);
                     logger.SendMessage(TestMessageLevel.Informational, t.DisplayName);
@@ -28,7 +27,7 @@ namespace CatchTestAdapter
             }
         }
 
-        public IList<TestCase> CreateTestCases(string exeName)
+        public static IList<TestCase> CreateTestCases(string exeName)
         {
             var testCases = new List<TestCase>();
             var p = new ProcessRunner(exeName, "--list-test-names-only");

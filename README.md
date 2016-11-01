@@ -12,7 +12,8 @@ TBD
 
 Status
 ======
-The skeleton test adapter is done. 
+- The skeleton test adapter is done.
+- Test cases are shown after discovery process. But no source information due to the fact that the Catch EXE doesn't have the option to figure it out. 
 
 TODO
 ====
