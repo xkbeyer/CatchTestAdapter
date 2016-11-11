@@ -8,13 +8,18 @@ TBD
 
 Usage
 =====
-TBD
+Nothing special, just open the TestExplorer and run the tests.
 
 Status
 ======
 - The skeleton test adapter is done.
-- Test cases are shown after discovery process. But no source information due to the fact that the Catch EXE doesn't have the option to figure it out. 
+- Test cases are shown after discovery process. Source information are available (by running the EXE).
+- Test result are shown. 
 
 TODO
 ====
-- A lot. 
+- Stack trace which links to the source location.
+- Avoid to run the exe in discovery and execution process.
+- Scenarios 
+- BDD
+- Check for side effects if other test adapter associated with EXE are installed.

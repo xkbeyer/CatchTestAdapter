@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestWindow;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace CatchTestAdapter
 {
@@ -28,7 +29,7 @@ namespace CatchTestAdapter
             frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with source " + sources.First());
             foreach(var exeName in sources)
             {
-                var tests = TestDiscoverer.CreateTestCases(exeName);
+                var  tests = TestDiscoverer.CreateTestCases(exeName);
                 RunTests(tests, runContext, frameworkHandle);
             }
         }
@@ -40,7 +41,6 @@ namespace CatchTestAdapter
             {
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
                 var p = new ProcessRunner(test.Source, "-r compact \"" + test.DisplayName + "\"");
-
                 var testResult = new TestResult(test);
                 testResult.Outcome = TestOutcome.Passed;
                 foreach (var s in p.Output)
@@ -52,11 +52,20 @@ namespace CatchTestAdapter
                         if( s.Contains("failed:"))
                         {
                             string srcline = s.Remove(s.LastIndexOf(": failed:"));
+                            string pattern = @"\(\d+\)";
+                            Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+                            MatchCollection matches = rgx.Matches(srcline);
+                            string lineno = "";
+                            if( matches.Count != 0)
+                            {
+                                lineno = matches[0].Value.Trim('(',')');
+                            }
+
                             string errtxt = s.Remove(0, s.LastIndexOf("failed:"));
                             var errmsg = new TestResultMessage(TestResultMessage.StandardErrorCategory, s + "\n");
                             testResult.Messages.Add(errmsg);
                             testResult.ErrorMessage += errtxt + "\n";
-                            testResult.ErrorStackTrace += srcline + "\n";
+                            testResult.ErrorStackTrace += "at " + test.DisplayName + " in " +srcline.Remove(s.IndexOf("(")) + ": Line "+ lineno + "\n";
                             testResult.Outcome = TestOutcome.Failed;
                         }
                         frameworkHandle.SendMessage(TestMessageLevel.Informational, s);
