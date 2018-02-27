@@ -65,7 +65,7 @@ namespace CatchTestAdapter
                             var errmsg = new TestResultMessage(TestResultMessage.StandardErrorCategory, s + "\n");
                             testResult.Messages.Add(errmsg);
                             testResult.ErrorMessage += errtxt + "\n";
-                            testResult.ErrorStackTrace += "at " + test.DisplayName + " in " +srcline.Remove(s.IndexOf("(")) + ": Line "+ lineno + "\n";
+                            testResult.ErrorStackTrace += "at " + test.DisplayName + "() in " + srcline.Remove( s.IndexOf( "(" ) ) + ":line " + lineno + "\n";
                             testResult.Outcome = TestOutcome.Failed;
                         }
                         frameworkHandle.SendMessage(TestMessageLevel.Informational, s);
