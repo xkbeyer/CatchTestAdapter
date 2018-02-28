@@ -12,6 +12,7 @@
 *.opensdf
 *.psess
 *.vspx
+*.opendb
 
 # Ignore the VS build folders
 **/obj/**
