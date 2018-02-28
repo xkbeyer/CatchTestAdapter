@@ -117,8 +117,12 @@ namespace CatchTestAdapter
                         && line.Current.Trim() != "(NO DESCRIPTION)"
                         && currentGroup.Count > 0 )
                     {
+                        // Remove the indentation from the line before appending it.
+                        // Cannot just Trim, because there could be a space in the file name.
+                        string strippedline = line.Current.Substring( indent );
+
                         // Append this line to the last one.
-                        currentGroup[ currentGroup.Count - 1 ] += line.Current;
+                        currentGroup[ currentGroup.Count - 1 ] += strippedline;
                     }
                     else
                     {
