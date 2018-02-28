@@ -51,12 +51,11 @@ namespace TestAdapterTest
                 new MockMessageLogger(),
                 testSink );
 
-            // The reference project cases are on these lines.
-            // Currently, the line of the first section in the case is reported.
+            // The reference project test cases are on these lines.
             var linesOfCases = new Dictionary<string, int>();
-            linesOfCases.Add( "No tags", 8 );
-            linesOfCases.Add( "With tags", 18 );
-            linesOfCases.Add( "Has failure", 26 );
+            linesOfCases.Add( "No tags", 6 );
+            linesOfCases.Add( "With tags", 16 );
+            linesOfCases.Add( "Has failure", 24 );
 
             foreach( var test in testSink.Tests )
             {
