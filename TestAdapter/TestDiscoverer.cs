@@ -101,10 +101,39 @@ namespace CatchTestAdapter
                     // Begin a new group.
                     currentGroup = new List<string>();
                 }
-                lastIndent = indent;
 
-                // Add the line to the current group.
-                currentGroup.Add( line.Current );
+                // Catch word-wraps lines at 80 columns. Try to recognize this
+                // and combine the lines.
+                if ( currentGroup.Count > 0 )
+                {
+                    // Get the last line.
+                    string lastLine = currentGroup[ currentGroup.Count - 1 ];
+
+                    // If the last line was precisely 78 characters wide,
+                    // indentation did not change, and it is not a special message,
+                    // it is likelt the continuation of the last line.
+                    if ( lastLine.Length == 78
+                        && indent == lastIndent
+                        && line.Current.Trim() != "(NO DESCRIPTION)"
+                        && currentGroup.Count > 0 )
+                    {
+                        // Append this line to the last one.
+                        currentGroup[ currentGroup.Count - 1 ] += line.Current;
+                    }
+                    else
+                    {
+                        // Add the line to the current group.
+                        currentGroup.Add( line.Current );
+                    }
+                }
+                else
+                {
+                    // Add the line to the current group.
+                    currentGroup.Add( line.Current );
+                }
+
+                // Remember indent.
+                lastIndent = indent;
             }
 
             // Yield the final group.
