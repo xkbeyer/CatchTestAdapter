@@ -8,6 +8,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAdapter", "TestAdapter\TestAdapter.csproj", "{25DDAD58-AC83-402D-9D51-06CD0C8177F5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAdapterTest", "TestAdapterTest\TestAdapterTest.csproj", "{EF610FE2-77F0-4719-B2D7-E90233C1972E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{093C2997-4AE2-45A6-85C3-8A459232AD1A} = {093C2997-4AE2-45A6-85C3-8A459232AD1A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReferenceCatchProject", "TestAdapterTest\ReferenceCatchProject\ReferenceCatchProject.vcxproj", "{093C2997-4AE2-45A6-85C3-8A459232AD1A}"
 EndProject
