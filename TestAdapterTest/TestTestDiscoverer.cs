@@ -12,14 +12,10 @@ namespace TestAdapterTest
     [TestClass]
     public class TestTestDiscoverer
     {
-        // The path to the reference catch executable.
-        const string referenceExe = @"ReferenceCatchProject.exe";
-        const string referenceExePath = @"..\..\..\x64\Debug\ReferenceCatchProject.exe";
-        readonly List<string> referenceExeList = new List<String>() { referenceExe };
 
         // Tests that all the tests in the reference project are found.
         [TestMethod]
-        [DeploymentItem( referenceExePath )]
+        [DeploymentItem( Common.ReferenceExePath )]
 		public void DiscoversAllTests()
 		{
             // Initialize a mock sink to keep track of the discovered tests.
@@ -27,18 +23,18 @@ namespace TestAdapterTest
 
             // Discover tests from the reference project.
             TestDiscoverer discoverer = new TestDiscoverer();
-            discoverer.DiscoverTests( referenceExeList,
+            discoverer.DiscoverTests( Common.ReferenceExeList,
                 new MockDiscoveryContext(),
                 new MockMessageLogger(),
                 testSink );
 
             // There is a known number of test cases in the reference project.
-            Assert.AreEqual( testSink.Tests.Count, 3 );
+            Assert.AreEqual( testSink.Tests.Count, Common.ReferenceTestCount );
         }
 
         // Tests that the test case lines are correct.
         [TestMethod]
-        [DeploymentItem( referenceExePath )]
+        [DeploymentItem( Common.ReferenceExePath )]
         public void TestCaseLinesCorrect()
         {
             // Initialize a mock sink to keep track of the discovered tests.
@@ -46,7 +42,7 @@ namespace TestAdapterTest
 
             // Discover tests from the reference project.
             TestDiscoverer discoverer = new TestDiscoverer();
-            discoverer.DiscoverTests( referenceExeList,
+            discoverer.DiscoverTests( Common.ReferenceExeList,
                 new MockDiscoveryContext(),
                 new MockMessageLogger(),
                 testSink );
