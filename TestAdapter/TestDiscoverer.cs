@@ -43,7 +43,7 @@ namespace CatchTestAdapter
         }
 
         // Regular expression for separating file path and line number from catch output.
-        static Regex lineInfoPattern = new Regex( @"(?<path>.*)\((?<line>\d+)\)" );
+        static Regex lineInfoPattern = new Regex( @"(?<path>.*)\((?<line>\d+)\)$" );
 
         private static TestCase LineGroupToTestCase( string exeName, IList<string> lineGroup )
         {
@@ -55,10 +55,23 @@ namespace CatchTestAdapter
             }
 
             // Get the name.
-            string name = lineGroup[ 0 ].Trim();
+            string name = lineGroup[ 0 ];
+
+            // If the line info contains a long full path,
+            // catch may have wrapped it to multiple lines.
+            // We have to combine them into one.
+            string lineInfoString = lineGroup[ 1 ];
+            for ( int i = 2; i < lineGroup.Count; i++ )
+            {
+                // When we have something that looks like a source line information,
+                // be satisfied with it. Otherwise append the next line to it.
+                if ( lineInfoPattern.IsMatch( lineInfoString ) )
+                    break;
+                else
+                    lineInfoString += lineGroup[ i ];
+            }
 
             // Parse line info with regex.
-            string lineInfoString = lineGroup[ 1 ].Trim();
             var match = lineInfoPattern.Match( lineInfoString );
             if ( !match.Success )
                 throw new Exception(String.Format("Could not parse line info from '{0}'.", lineInfoString ) );
@@ -102,39 +115,8 @@ namespace CatchTestAdapter
                     currentGroup = new List<string>();
                 }
 
-                // Catch word-wraps lines at 80 columns. Try to recognize this
-                // and combine the lines.
-                if ( currentGroup.Count > 0 )
-                {
-                    // Get the last line.
-                    string lastLine = currentGroup[ currentGroup.Count - 1 ];
-
-                    // If the last line was precisely 78 characters wide,
-                    // indentation did not change, and it is not a special message,
-                    // it is likelt the continuation of the last line.
-                    if ( lastLine.Length == 78
-                        && indent == lastIndent
-                        && line.Current.Trim() != "(NO DESCRIPTION)"
-                        && currentGroup.Count > 0 )
-                    {
-                        // Remove the indentation from the line before appending it.
-                        // Cannot just Trim, because there could be a space in the file name.
-                        string strippedline = line.Current.Substring( indent );
-
-                        // Append this line to the last one.
-                        currentGroup[ currentGroup.Count - 1 ] += strippedline;
-                    }
-                    else
-                    {
-                        // Add the line to the current group.
-                        currentGroup.Add( line.Current );
-                    }
-                }
-                else
-                {
-                    // Add the line to the current group.
-                    currentGroup.Add( line.Current );
-                }
+                // Add the line to the current group.
+                currentGroup.Add( line.Current.Trim() );
 
                 // Remember indent.
                 lastIndent = indent;
