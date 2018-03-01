@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using System.Globalization;
 
 namespace CatchTestAdapter
 {
@@ -55,19 +56,26 @@ namespace CatchTestAdapter
         /// <returns></returns>
         bool TryGetFailure( XElement element, out FlatResult result )
         {
+            // Parse test cases and their sections.
             if( element.Name == "Section" || element.Name == "TestCase" )
             {
+                // Get current level's name.
                 string name = element.Attribute( "name" ).Value;
 
                 // Try to find the failure from this element.
                 foreach( var expression in element.Elements("Expression") )
                 {
+                    // Map the failure to a flat result.
                     if ( expression.Attribute( "success" ).Value == "false" )
                     {
                         string expanded = expression.Element( "Expanded" ).Value;
+                        string original = expression.Element( "Original" ).Value;
+                        string type = expression.Attribute( "type" ).Value;
                         result = new FlatResult() {
+                            // The path will be expanced by preciding stack frames.
                             SectionPath = name,
-                            Expression = expanded,
+                            Expression = String.Format( CultureInfo.InvariantCulture,
+                                "{0} {1} => {2}", type, original, expanded),
                             LineNumber = Int32.Parse( expression.Attribute("line").Value ),
                             FilePath = expression.Attribute("filename").Value
                         };
@@ -78,15 +86,17 @@ namespace CatchTestAdapter
                 // Try to find the failure from a subsection of this element.
                 foreach( var section in element.Elements("Section") )
                 {
+                    // Try to find a failure in this section.
                     if( TryGetFailure( section, out result ) )
                     {
+                        // If found, add the current section to the path and return it.
                         result.SectionPath = name + "\n" + result.SectionPath;
                         return true;
                     }
                 }
             }
 
-            // Return dummy result if not found.
+            // Return a dummy result if no failure found.
             result = new FlatResult() {
                 SectionPath = "[Not found]",
                 Expression = "N/A",
@@ -95,6 +105,11 @@ namespace CatchTestAdapter
             return false;
         }
 
+        /// <summary>
+        /// Finds a failure in a test case and flattens the section path that leads to it.
+        /// </summary>
+        /// <param name="testCase"></param>
+        /// <returns></returns>
         FlatResult GetFlatFailure( XElement testCase )
         {
             FlatResult result;
@@ -131,11 +146,15 @@ namespace CatchTestAdapter
                         }
                         else
                         {
+                            // Mark failure.
                             testResult.Outcome = TestOutcome.Failed;
-                            FlatResult failure = GetFlatFailure( testCase );
-                            testResult.ErrorMessage = failure.SectionPath + "\n" + failure.Expression;
 
-                            testResult.ErrorStackTrace = String.Format( "at {0}() in {1}:line {2}\n",
+                            // Parse the failure to a flat result.
+                            FlatResult failure = GetFlatFailure( testCase );
+
+                            // Populate the test result.
+                            testResult.ErrorMessage = failure.SectionPath + "\n" + failure.Expression;
+                            testResult.ErrorStackTrace = String.Format( CultureInfo.InvariantCulture, "at {0}() in {1}:line {2}\n",
                                 test.DisplayName,
                                 failure.FilePath,
                                 failure.LineNumber );
