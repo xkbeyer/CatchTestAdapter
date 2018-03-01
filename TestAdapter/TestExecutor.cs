@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestWindow;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using System.Xml.XPath;
 
 namespace CatchTestAdapter
 {
@@ -33,6 +34,74 @@ namespace CatchTestAdapter
                 var  tests = TestDiscoverer.CreateTestCases(exeName);
                 RunTests(tests, runContext, frameworkHandle);
             }
+        }
+
+        /// <summary>
+        /// Describes the result of an expression, with the section path flattened to a string.
+        /// </summary>
+        struct FlatResult
+        {
+            public string SectionPath;
+            public string Expression;
+            public int LineNumber;
+            public string FilePath;
+        }
+
+        /// <summary>
+        /// Tries to find a failure in the section tree of a test case.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        bool TryGetFailure( XElement element, out FlatResult result )
+        {
+            if( element.Name == "Section" || element.Name == "TestCase" )
+            {
+                string name = element.Attribute( "name" ).Value;
+
+                // Try to find the failure from this element.
+                foreach( var expression in element.Elements("Expression") )
+                {
+                    if ( expression.Attribute( "success" ).Value == "false" )
+                    {
+                        string expanded = expression.Element( "Expanded" ).Value;
+                        result = new FlatResult() {
+                            SectionPath = name,
+                            Expression = expanded,
+                            LineNumber = Int32.Parse( expression.Attribute("line").Value ),
+                            FilePath = expression.Attribute("filename").Value
+                        };
+                        return true;
+                    }
+                }
+
+                // Try to find the failure from a subsection of this element.
+                foreach( var section in element.Elements("Section") )
+                {
+                    if( TryGetFailure( section, out result ) )
+                    {
+                        result.SectionPath = name + "\n" + result.SectionPath;
+                        return true;
+                    }
+                }
+            }
+
+            // Return dummy result if not found.
+            result = new FlatResult() {
+                SectionPath = "[Not found]",
+                Expression = "N/A",
+                LineNumber = -1,
+                FilePath = "" };
+            return false;
+        }
+
+        FlatResult GetFlatFailure( XElement testCase )
+        {
+            FlatResult result;
+            if ( TryGetFailure( testCase, out result ) )
+                return result;
+            else
+                throw new Exception( "Could not find failure " + testCase.ToString() );
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
@@ -63,6 +132,13 @@ namespace CatchTestAdapter
                         else
                         {
                             testResult.Outcome = TestOutcome.Failed;
+                            FlatResult failure = GetFlatFailure( testCase );
+                            testResult.ErrorMessage = failure.SectionPath + "\n" + failure.Expression;
+
+                            testResult.ErrorStackTrace = String.Format( "at {0}() in {1}:line {2}\n",
+                                test.DisplayName,
+                                failure.FilePath,
+                                failure.LineNumber );
                         }
                     }
                 }
