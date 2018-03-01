@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestWindow;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace CatchTestAdapter
 {
@@ -40,35 +41,29 @@ namespace CatchTestAdapter
             foreach (var test in tests)
             {
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
-                var p = new ProcessRunner(test.Source, "-r compact \"" + test.DisplayName + "\"");
-                var testResult = new TestResult(test);
-                testResult.Outcome = TestOutcome.Passed;
-                foreach (var s in p.Output)
-                {
-                    if (s.Length != 0)
-                    {
-                        var msg = new TestResultMessage(TestResultMessage.StandardOutCategory, s + "\n");
-                        testResult.Messages.Add(msg);
-                        if( s.Contains("failed:"))
-                        {
-                            string srcline = s.Remove(s.LastIndexOf(": failed:"));
-                            string pattern = @"\(\d+\)";
-                            Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
-                            MatchCollection matches = rgx.Matches(srcline);
-                            string lineno = "";
-                            if( matches.Count != 0)
-                            {
-                                lineno = matches[0].Value.Trim('(',')');
-                            }
+                var p = new ProcessRunner(test.Source, "-r xml \"" + test.DisplayName + "\"");
 
-                            string errtxt = s.Remove(0, s.LastIndexOf("failed:"));
-                            var errmsg = new TestResultMessage(TestResultMessage.StandardErrorCategory, s + "\n");
-                            testResult.Messages.Add(errmsg);
-                            testResult.ErrorMessage += errtxt + "\n";
-                            testResult.ErrorStackTrace += "at " + test.DisplayName + "() in " + srcline.Remove( s.IndexOf( "(" ) ) + ":line " + lineno + "\n";
+                // Output as a single string.
+                string output = p.Output.Aggregate( "", ( acc, add ) => acc + add );
+
+                // Output as an XML document.
+                XDocument doc = XDocument.Parse( output );
+
+                // Process the output.
+                var testResult = new TestResult( test );
+                foreach ( var group in doc.Element("Catch").Elements("Group") )
+                {
+                    foreach( var testCase in group.Elements( "TestCase" ) )
+                    {
+                        XElement result = testCase.Element( "OverallResult" );
+                        if( result.Attribute("success" ).Value.ToLowerInvariant() == "true" )
+                        {
+                            testResult.Outcome = TestOutcome.Passed;
+                        }
+                        else
+                        {
                             testResult.Outcome = TestOutcome.Failed;
                         }
-                        frameworkHandle.SendMessage(TestMessageLevel.Informational, s);
                     }
                 }
                 frameworkHandle.RecordResult(testResult);
