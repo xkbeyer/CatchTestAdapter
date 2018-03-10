@@ -12,11 +12,19 @@
 *.opensdf
 *.psess
 *.vspx
+*.opendb
+
+# Ignore test results
+TestResults
 
 # Ignore the VS build folders
 **/obj/**
 **/bin/**
 .vs/**
+**/x64/Debug
+**/x64/Release
+**/Win32/Debug
+**/Win32/Release
 
 # And some system's temp files
 *~
