@@ -1,5 +1,6 @@
 # Ignore some of the VC++ user-files
 *.csproj.user
+*.vcxproj.user
 *.sdf
 *.suo
 *.ilk
