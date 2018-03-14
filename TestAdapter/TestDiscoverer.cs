@@ -96,9 +96,9 @@ namespace CatchTestAdapter
                 // Find all things that look like catch tags.
                 foreach( Match match in tagPattern.Matches( lineGroup[ i ] ) )
                 {
-                    // Create the tags as traits with themselves as their values.
+                    // Create the tags as traits with empty values.
                     string tag = match.Groups[ 1 ].Value;
-                    test.Traits.Add( new Trait( tag, tag ) );
+                    test.Traits.Add( new Trait( tag, "" ) );
                 }
             }
 
