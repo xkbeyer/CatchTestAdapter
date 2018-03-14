@@ -53,5 +53,28 @@ namespace TestAdapterTest
             TestResult success = resultsByName[ "With tags" ];
             Assert.AreEqual( TestOutcome.Passed, success.Outcome );
         }
+
+        [TestMethod]
+        public void ForcedFailureHasMessage()
+        {
+            // Set up a fake testing context.
+            var framework = new MockFrameworkHandle();
+
+            // Execute all tests.
+            TestExecutor executor = new TestExecutor();
+            executor.RunTests( Common.ReferenceExeList, new MockRunContext(), framework );
+
+            // Map the tests by name.
+            Dictionary<string, TestResult> resultsByName = new Dictionary<string, TestResult>();
+            foreach ( var result in framework.Results )
+            {
+                resultsByName[ result.TestCase.FullyQualifiedName ] = result;
+            }
+
+            // Check that the test with a forced failure has the user-given message in the output.
+            TestResult forcedFailure = resultsByName[ "Has forced failure" ];
+            Assert.AreEqual( TestOutcome.Failed, forcedFailure.Outcome );
+            Assert.IsTrue( forcedFailure.ErrorMessage.Contains( "This message should be in the failure report." ) );
+        }
     }
 }
