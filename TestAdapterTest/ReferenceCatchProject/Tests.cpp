@@ -33,3 +33,11 @@ TEST_CASE( "Has failure", "[tag]" )
 		REQUIRE( false );
 	}
 }
+
+TEST_CASE( "Has forced failure", "[tag]" )
+{
+	SECTION( "Forced failure section" )
+	{
+		FAIL( "This message should be in the failure report." );
+	}
+}
