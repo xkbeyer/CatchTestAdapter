@@ -132,7 +132,7 @@ namespace CatchTestAdapter
             foreach (var test in tests)
             {
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
-                var p = new ProcessRunner(test.Source, "-r xml \"" + test.DisplayName + "\"");
+                var p = new ProcessRunner(test.Source, "-r xml --durations yes \"" + test.DisplayName + "\"");
 
                 // Output as a single string.
                 string output = p.Output.Aggregate( "", ( acc, add ) => acc + add );
@@ -166,6 +166,9 @@ namespace CatchTestAdapter
                                 failure.FilePath,
                                 failure.LineNumber );
                         }
+
+                        var testTime = result.Attribute("durationInSeconds").Value;
+                        testResult.Duration = TimeSpan.FromSeconds( Double.Parse(testTime, CultureInfo.InvariantCulture));
                     }
                 }
                 frameworkHandle.RecordResult(testResult);
