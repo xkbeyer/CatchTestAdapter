@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System.Xml.Linq;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace CatchTestAdapter
 {
@@ -132,6 +133,9 @@ namespace CatchTestAdapter
             frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with test cases " + tests);
             foreach (var test in tests)
             {
+                // Start a timer.
+                var timer = Stopwatch.StartNew();
+
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
                 var p = new ProcessRunner(test.Source, "-r xml \"" + test.DisplayName + "\"");
 
@@ -169,6 +173,11 @@ namespace CatchTestAdapter
                         }
                     }
                 }
+
+                // Record the time taken.
+                timer.Stop();
+                testResult.Duration = timer.Elapsed;
+
                 frameworkHandle.RecordResult(testResult);
             }
         }
