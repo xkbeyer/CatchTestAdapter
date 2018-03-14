@@ -13,7 +13,7 @@ TEST_CASE( "No tags" )
 
 
 // Test case with tags.
-TEST_CASE( "With tags", "[tag]" )
+TEST_CASE( "With tags", "[tag][neat]" )
 {
 	SECTION( "Success" )
 	{

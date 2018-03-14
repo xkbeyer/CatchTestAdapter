@@ -6,6 +6,8 @@ using System.Collections.Generic;
 
 using TestAdapterTest.Mocks;
 using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace TestAdapterTest
 {
@@ -68,6 +70,33 @@ namespace TestAdapterTest
 
             // Make sure all the cases we wanted got checked.
             Assert.AreEqual( linesOfCases.Count, 0, String.Format( "Unhandled cases: {0}", linesOfCases.ToString() ) );
+        }
+
+        // Tests that tags are translated to traits.
+        [TestMethod]
+        [DeploymentItem( Common.ReferenceExePath )]
+        public void TestTagsToTraits()
+        {
+            // Initialize a mock sink to keep track of the discovered tests.
+            MockTestCaseDiscoverySink testSink = new MockTestCaseDiscoverySink();
+
+            // Discover tests from the reference project.
+            TestDiscoverer discoverer = new TestDiscoverer();
+            discoverer.DiscoverTests( Common.ReferenceExeList,
+                new MockDiscoveryContext(),
+                new MockMessageLogger(),
+                testSink );
+
+            // Get the test with tags.
+            TestCase tagsTest = testSink.Tests.Where( test => test.DisplayName == "With tags" ).First();
+
+            // The tags should be present in the test as traits.
+            string traits = tagsTest.Traits
+                .Select( trait => trait.Name )
+                .Aggregate("", ( acc, add ) => acc + "," + add );
+            Assert.AreEqual( 2, tagsTest.Traits.Count() );
+            Assert.IsTrue( tagsTest.Traits.Any( trait => trait.Name == "tag" ), traits );
+            Assert.IsTrue( tagsTest.Traits.Any( trait => trait.Name == "neat" ), traits );
         }
     }
 }

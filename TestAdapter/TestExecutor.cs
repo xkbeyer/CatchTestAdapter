@@ -14,7 +14,6 @@ namespace CatchTestAdapter
     {
         public const string ExecutorUriString = "executor://CatchTestRunner/v1";
         public static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
-        private string exe;
 
         public void Cancel()
         {
