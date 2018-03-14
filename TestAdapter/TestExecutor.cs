@@ -128,7 +128,7 @@ namespace CatchTestAdapter
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with test cases " + tests);
+            frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with test cases:");
             foreach (var test in tests)
             {
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
