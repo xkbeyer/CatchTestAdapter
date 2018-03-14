@@ -61,28 +61,47 @@ namespace CatchTestAdapter
             // catch may have wrapped it to multiple lines.
             // We have to combine them into one.
             string lineInfoString = lineGroup[ 1 ];
-            for ( int i = 2; i < lineGroup.Count; i++ )
+            int lastLineInfoLine = 2;
+            for ( ; lastLineInfoLine < lineGroup.Count; lastLineInfoLine++ )
             {
                 // When we have something that looks like a source line information,
                 // be satisfied with it. Otherwise append the next line to it.
                 if ( lineInfoPattern.IsMatch( lineInfoString ) )
                     break;
                 else
-                    lineInfoString += lineGroup[ i ];
+                    lineInfoString += lineGroup[ lastLineInfoLine ];
             }
 
             // Parse line info with regex.
-            var match = lineInfoPattern.Match( lineInfoString );
-            if ( !match.Success )
+            var lineInfoMatch = lineInfoPattern.Match( lineInfoString );
+            if ( !lineInfoMatch.Success )
                 throw new Exception(String.Format("Could not parse line info from '{0}'.", lineInfoString ) );
 
-            string path = match.Groups[ "path" ].Value;
-            int lineNumber = Int32.Parse( match.Groups[ "line" ].Value );
+            string path = lineInfoMatch.Groups[ "path" ].Value;
+            int lineNumber = Int32.Parse( lineInfoMatch.Groups[ "line" ].Value );
 
             // Construct the test.
             TestCase test = new TestCase( name, new Uri( TestExecutor.ExecutorUriString ), exeName );
             test.CodeFilePath = path;
             test.LineNumber = lineNumber;
+
+            // Turn tags to traits.
+
+            // Catch tags are enclosed in square brackets.
+            Regex tagPattern = new Regex( @"\[([^]]+)\]" );
+
+            // Look at all lines after the line info.
+            for( int i = lastLineInfoLine + 1; i < lineGroup.Count; ++i )
+            {
+                // Find all things that look like catch tags.
+                foreach( Match match in tagPattern.Matches( lineGroup[ i ] ) )
+                {
+                    // Create the tags as traits with themselves as their values.
+                    string tag = match.Groups[ 1 ].Value;
+                    test.Traits.Add( new Trait( tag, tag ) );
+                }
+            }
+
             return test;
         }
 
