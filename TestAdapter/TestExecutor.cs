@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System.Xml.Linq;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace CatchTestAdapter
 {
@@ -65,10 +66,9 @@ namespace CatchTestAdapter
                         string original = expression.Element( "Original" ).Value;
                         string type = expression.Attribute( "type" ).Value;
                         result = new FlatResult() {
-                            // The path will be expanced by preciding stack frames.
+                            // The path will be expanded by preceding stack frames.
                             SectionPath = name,
-                            Expression = String.Format( CultureInfo.InvariantCulture,
-                                "{0} {1} => {2}", type, original, expanded),
+                            Expression = String.Format( CultureInfo.InvariantCulture, "{0} {1} => {2}", type, original, expanded),
                             LineNumber = Int32.Parse( expression.Attribute("line").Value ),
                             FilePath = expression.Attribute("filename").Value
                         };
@@ -128,51 +128,67 @@ namespace CatchTestAdapter
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with test cases:");
-            foreach (var test in tests)
+            var CatchExe = tests.First().Source;
+            var timer = Stopwatch.StartNew();
+            
+            // Get a list of all test case names
+            var listOfTestCases = tests.Aggregate("", (acc, test) => acc + test.DisplayName + "\n");
+            
+            // Write them to the input file for Catch runner
+            System.IO.File.WriteAllText(CatchExe + ".testcases", listOfTestCases);
+            
+            // Execute the tests
+            var output_text = new ProcessRunner(CatchExe, "-r xml --durations yes --input-file " + CatchExe + ".testcases");
+
+            timer.Stop();
+            frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
+
+            // Output as a single string.
+            string output = output_text.Output.Aggregate("", (acc, add) => acc + add);
+
+            // Output as an XML document.
+            XDocument doc = XDocument.Parse(output);
+
+            // Process the output.
+            foreach(var group in doc.Element("Catch").Elements("Group"))
             {
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, test.DisplayName);
-                var p = new ProcessRunner(test.Source, "-r xml --durations yes \"" + test.DisplayName + "\"");
-
-                // Output as a single string.
-                string output = p.Output.Aggregate( "", ( acc, add ) => acc + add );
-
-                // Output as an XML document.
-                XDocument doc = XDocument.Parse( output );
-
-                // Process the output.
-                var testResult = new TestResult( test );
-                foreach ( var group in doc.Element("Catch").Elements("Group") )
+                foreach(var testCase in group.Elements("TestCase"))
                 {
-                    foreach( var testCase in group.Elements( "TestCase" ) )
+                    // Find the matching test case
+                    var test = tests.Where((test_case) => test_case.DisplayName == testCase.Attribute("name").Value).ElementAt(0);
+
+                    var testResult = new TestResult(test);
+                    XElement result = testCase.Element("OverallResult");
+                    if(result.Attribute("success").Value.ToLowerInvariant() == "true")
                     {
-                        XElement result = testCase.Element( "OverallResult" );
-                        if( result.Attribute("success" ).Value.ToLowerInvariant() == "true" )
-                        {
-                            testResult.Outcome = TestOutcome.Passed;
-                        }
-                        else
-                        {
-                            // Mark failure.
-                            testResult.Outcome = TestOutcome.Failed;
-
-                            // Parse the failure to a flat result.
-                            FlatResult failure = GetFlatFailure( testCase );
-
-                            // Populate the test result.
-                            testResult.ErrorMessage = failure.SectionPath + "\n" + failure.Expression;
-                            testResult.ErrorStackTrace = String.Format( CultureInfo.InvariantCulture, "at {0}() in {1}:line {2}\n",
-                                test.DisplayName,
-                                failure.FilePath,
-                                failure.LineNumber );
-                        }
-
-                        var testTime = result.Attribute("durationInSeconds").Value;
-                        testResult.Duration = TimeSpan.FromSeconds( Double.Parse(testTime, CultureInfo.InvariantCulture));
+                        testResult.Outcome = TestOutcome.Passed;
                     }
+                    else
+                    {
+                        // Mark failure.
+                        testResult.Outcome = TestOutcome.Failed;
+
+                        // Parse the failure to a flat result.
+                        FlatResult failure = GetFlatFailure(testCase);
+
+                        // Populate the test result.
+                        testResult.ErrorMessage = failure.SectionPath + "\n" + failure.Expression;
+                        testResult.ErrorStackTrace = String.Format(CultureInfo.InvariantCulture, "at {0}() in {1}:line {2}\n",
+                            test.DisplayName,
+                            failure.FilePath,
+                            failure.LineNumber);
+                    }
+
+                    // Add the test execution time provided by Catch to the result.
+                    var testTime = result.Attribute("durationInSeconds").Value;
+                    testResult.Duration = TimeSpan.FromSeconds(Double.Parse(testTime, CultureInfo.InvariantCulture));
+                    
+                    // Finally record the result.
+                    frameworkHandle.RecordResult(testResult);
                 }
-                frameworkHandle.RecordResult(testResult);
             }
+            // Remove the temporary input file.
+            System.IO.File.Delete(CatchExe + ".testcases");
         }
     }
 }
