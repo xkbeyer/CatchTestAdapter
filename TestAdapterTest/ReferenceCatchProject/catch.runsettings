@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>  
+<RunSettings>
+
+  <!-- Adapter Specific sections -->
+
+  <!-- Catch adapter -->
+  <Catch>
+    <!-- Regex that must match exe for tests to be searched from it. -->
+    <TestExeFilter>Reference</TestExeFilter>
+  </Catch>
+
+</RunSettings>
