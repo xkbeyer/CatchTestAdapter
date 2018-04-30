@@ -21,7 +21,7 @@ namespace TestAdapter.Settings
         /// <summary>
         /// The name of the XML that holds these settings.
         /// </summary>
-        public const string XmlRoot = "Catch";
+        public const string XmlRoot = "CatchAdapter";
 
         public CatchAdapterSettings(): base( XmlRoot ) { }
 

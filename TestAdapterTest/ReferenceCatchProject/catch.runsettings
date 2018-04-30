@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RunSettings
+<RunSettings>
 
   <!-- Adapter Specific sections -->
 
   <!-- Catch adapter -->
-  <Catch>
+  <CatchAdapter>
     <!-- Regex that must match exe for tests to be searched from it. -->
     <TestExeInclude>
       <Regex>Reference</Regex>
@@ -13,6 +13,6 @@
     <TestExeExclude>
       <Regex>Cheese</Regex>
     </TestExeExclude>
-  </Catch>
+  </CatchAdapter>
 
 </RunSettings>
