@@ -30,8 +30,16 @@ namespace TestAdapter.Settings
         /// <summary>
         /// Regex used to find test executables.
         /// </summary>
-        [DefaultValue( @".*\.exe" )]
-        public string TestExeFilter { get; set; } = @".*\.exe";
+        [XmlArray( "TestExeInclude" )]
+        [XmlArrayItem( "Regex" )]
+        public List<string> TestExeInclude { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Regex used to exclude test executables.
+        /// </summary>
+        [XmlArray( "TestExeExclude" )]
+        [XmlArrayItem( "Regex" )]
+        public List<string> TestExeExclude { get; set; } = new List<string>();
 
         #endregion
 
@@ -44,7 +52,15 @@ namespace TestAdapter.Settings
         /// <returns></returns>
         public bool IncludeTestExe( string name )
         {
-            return Regex.Match( name, this.TestExeFilter ).Success;
+            // If there are include patterns, the name must match one of them.
+            if( this.TestExeInclude.Count > 0 )
+            {
+                if ( !TestExeInclude.Any( regex => Regex.IsMatch( name, regex ) ) )
+                    return false;
+            }
+
+            // The name must not match any exclude pattern.
+            return !this.TestExeExclude.Any( regex => Regex.IsMatch( name, regex ) );
         }
 
         #endregion Interpretations

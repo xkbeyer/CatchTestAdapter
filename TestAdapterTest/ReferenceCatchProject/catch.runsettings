@@ -1,12 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>  
-<RunSettings>
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings
 
   <!-- Adapter Specific sections -->
 
   <!-- Catch adapter -->
   <Catch>
     <!-- Regex that must match exe for tests to be searched from it. -->
-    <TestExeFilter>Reference</TestExeFilter>
+    <TestExeInclude>
+      <Regex>Reference</Regex>
+    </TestExeInclude>
+    <!-- If this regex matches, the exe is excluded even if it matches the include. -->
+    <TestExeExclude>
+      <Regex>Cheese</Regex>
+    </TestExeExclude>
   </Catch>
 
 </RunSettings>

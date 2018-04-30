@@ -112,7 +112,7 @@ namespace TestAdapterTest
             var context = new MockDiscoveryContext();
             var provider = new CatchSettingsProvider();
             provider.Settings = new CatchAdapterSettings();
-            provider.Settings.TestExeFilter = @"ReferenceCatchProject\.exe";
+            provider.Settings.TestExeInclude.Add( @"ReferenceCatchProject\.exe" );
             context.MockSettings.Provider = provider;
 
             // Discover tests from the reference project and from anon-existent exe.
@@ -133,7 +133,8 @@ namespace TestAdapterTest
             testSink = new MockTestCaseDiscoverySink();
 
             // Filter all exes.
-            provider.Settings.TestExeFilter = "laksjdlkjalsdjasljd";
+            provider.Settings.TestExeInclude.Clear();
+            provider.Settings.TestExeInclude.Add( "laksjdlkjalsdjasljd" );
 
             // Discover again.
             discoverer.DiscoverTests( Common.ReferenceExeList,
