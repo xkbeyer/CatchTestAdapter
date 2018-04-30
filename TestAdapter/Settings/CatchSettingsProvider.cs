@@ -16,7 +16,7 @@ namespace TestAdapter.Settings
     /// </summary>
     [Export( typeof( ISettingsProvider ) )]
     [SettingsName( CatchAdapterSettings.XmlRoot )]
-    class CatchSettingsProvider : ISettingsProvider
+    public class CatchSettingsProvider : ISettingsProvider
     {
         /// <summary>
         /// Stored the last loaded settings, if any.

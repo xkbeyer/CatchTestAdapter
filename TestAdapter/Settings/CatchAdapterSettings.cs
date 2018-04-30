@@ -16,7 +16,7 @@ namespace TestAdapter.Settings
     /// Found as the element "Catch" in a Visual Studio runsettings xml file.
     /// </summary>
     [XmlRoot(XmlRoot)]
-    class CatchAdapterSettings : TestRunSettings
+    public class CatchAdapterSettings : TestRunSettings
     {
         /// <summary>
         /// The name of the XML that holds these settings.
