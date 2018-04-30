@@ -73,6 +73,7 @@
     <Compile Include="Mocks\MockFrameworkHandle.cs" />
     <Compile Include="Mocks\MockMessageLogger.cs" />
     <Compile Include="Mocks\MockRunContext.cs" />
+    <Compile Include="Mocks\MockRunSettings.cs" />
     <Compile Include="Mocks\MockTestCaseDiscoverySink.cs" />
     <Compile Include="TestTestDiscoverer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
