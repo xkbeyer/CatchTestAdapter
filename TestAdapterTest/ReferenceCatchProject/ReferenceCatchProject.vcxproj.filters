@@ -39,4 +39,7 @@
   <ItemGroup>
     <Text Include="README.md" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="catch.runsettings" />
+  </ItemGroup>
 </Project>

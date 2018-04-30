@@ -154,6 +154,11 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Tests.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="catch.runsettings">
+      <FileType>XML</FileType>
+    </None>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
