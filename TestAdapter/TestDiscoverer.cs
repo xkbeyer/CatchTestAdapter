@@ -19,7 +19,7 @@ namespace CatchTestAdapter
             logger.SendMessage(TestMessageLevel.Informational, "Catch Discover in process ...");
 
             // Load settings from the discovery context.
-            CatchAdapterSettings settings = CatchSettingsProvider.LoadSettings( discoveryContext );
+            CatchAdapterSettings settings = CatchSettingsProvider.LoadSettings( discoveryContext.RunSettings );
 
             //System.Diagnostics.Debugger.Launch();
             foreach (var src in sources.Where( src => settings.IncludeTestExe(src) ))

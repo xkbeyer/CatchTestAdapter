@@ -44,13 +44,13 @@ namespace TestAdapter.Settings
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static CatchAdapterSettings LoadSettings(IDiscoveryContext context )
+        public static CatchAdapterSettings LoadSettings(IRunSettings runSettings )
         {
             CatchAdapterSettings settings = new CatchAdapterSettings();
 
-            if( context.RunSettings != null )
+            if( runSettings != null )
             {
-                var provider = context.RunSettings.GetSettings( CatchAdapterSettings.XmlRoot ) as CatchSettingsProvider;
+                var provider = runSettings.GetSettings( CatchAdapterSettings.XmlRoot ) as CatchSettingsProvider;
                 if( provider != null && provider.Settings != null )
                 {
                     settings = provider.Settings;
