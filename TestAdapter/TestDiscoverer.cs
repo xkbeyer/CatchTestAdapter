@@ -24,6 +24,8 @@ namespace CatchTestAdapter
             //System.Diagnostics.Debugger.Launch();
             foreach (var src in sources.Where( src => settings.IncludeTestExe(src) ))
             {
+                logger.SendMessage( TestMessageLevel.Informational, $"Processing catch test source: '{src}'..." );
+
                 var testCases = CreateTestCases(src);
                 foreach (var t in testCases)
                 {
