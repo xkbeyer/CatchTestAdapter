@@ -8,6 +8,7 @@ using TestAdapterTest.Mocks;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using TestAdapter.Settings;
 
 namespace TestAdapterTest
 {
@@ -97,6 +98,52 @@ namespace TestAdapterTest
             Assert.AreEqual( 2, tagsTest.Traits.Count() );
             Assert.IsTrue( tagsTest.Traits.Any( trait => trait.Name == "tag" ), traits );
             Assert.IsTrue( tagsTest.Traits.Any( trait => trait.Name == "neat" ), traits );
+        }
+
+        [TestMethod]
+        [DeploymentItem( Common.ReferenceExePath )]
+        // Tests that filters in runsettings are obeyed.
+        public void FiltersTestExecutables()
+        {
+            // Initialize a mock sink to keep track of the discovered tests.
+            MockTestCaseDiscoverySink testSink = new MockTestCaseDiscoverySink();
+
+            // Configure a mock context.
+            var context = new MockDiscoveryContext();
+            var provider = new CatchSettingsProvider();
+            provider.Settings = new CatchAdapterSettings();
+            provider.Settings.TestExeInclude.Add( @"ReferenceCatchProject\.exe" );
+            context.MockSettings.Provider = provider;
+
+            // Discover tests from the reference project and from anon-existent exe.
+            // The non-existent exe should get filtered out and cause no trouble.
+            TestDiscoverer discoverer = new TestDiscoverer();
+            List<string> exeList = new List<string>();
+            exeList.AddRange( Common.ReferenceExeList );
+            exeList.Add( "nonsense.exe" );
+            discoverer.DiscoverTests( Common.ReferenceExeList,
+                context,
+                new MockMessageLogger(),
+                testSink );
+
+            // There is a known number of test cases in the reference project.
+            Assert.AreEqual( testSink.Tests.Count, Common.ReferenceTestCount );
+
+            // Clear the sink.
+            testSink = new MockTestCaseDiscoverySink();
+
+            // Filter all exes.
+            provider.Settings.TestExeInclude.Clear();
+            provider.Settings.TestExeInclude.Add( "laksjdlkjalsdjasljd" );
+
+            // Discover again.
+            discoverer.DiscoverTests( Common.ReferenceExeList,
+                context,
+                new MockMessageLogger(),
+                testSink );
+
+            // There should be no tests, as nothing matches the filter.
+            Assert.AreEqual( testSink.Tests.Count, 0 );
         }
     }
 }

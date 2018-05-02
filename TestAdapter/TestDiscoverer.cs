@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using System.Text.RegularExpressions;
 using System.Linq;
+using TestAdapter.Settings;
 
 namespace CatchTestAdapter
 {
@@ -16,9 +17,15 @@ namespace CatchTestAdapter
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
         {
             logger.SendMessage(TestMessageLevel.Informational, "Catch Discover in process ...");
+
+            // Load settings from the discovery context.
+            CatchAdapterSettings settings = CatchSettingsProvider.LoadSettings( discoveryContext.RunSettings );
+
             //System.Diagnostics.Debugger.Launch();
-            foreach (var src in sources)
+            foreach (var src in sources.Where( src => settings.IncludeTestExe(src) ))
             {
+                logger.SendMessage( TestMessageLevel.Informational, $"Processing catch test source: '{src}'..." );
+
                 var testCases = CreateTestCases(src);
                 foreach (var t in testCases)
                 {

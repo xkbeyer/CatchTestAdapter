@@ -23,6 +23,29 @@ Test
 ====
 The Adapter is tested against the Solution in [CatchUnitTestRef](https://github.com/xkbeyer/CatchUnitTestRef)
 
+Settings
+========
+You can configure the adapter by adding a `CatchAdapter` element to your .runsettings file.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Catch adapter -->
+  <CatchAdapter>
+    <!-- Regexes one of which must match an executable's name
+         for tests to be searched from it. -->
+    <TestExeInclude>
+      <Regex>.*\.Test\.exe</Regex>
+    </TestExeInclude>
+    <!-- If one of these regexes matches, the exe is excluded
+         even if it matches an include. -->
+    <TestExeExclude>
+      <Regex>Cheese</Regex>
+    </TestExeExclude>
+  </CatchAdapter>
+</RunSettings>
+```
+
 TODO
 ====
 - More tests in ReferenceCatchProject (may be combined with the test repo).

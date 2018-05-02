@@ -15,8 +15,10 @@ namespace TestAdapterTest.Mocks
         {
             get
             {
-                throw new NotImplementedException();
+                return this.MockSettings;
             }
         }
+
+        public MockRunSettings MockSettings { get; set; } = new MockRunSettings();
     }
 }

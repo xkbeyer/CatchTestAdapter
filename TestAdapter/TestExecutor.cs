@@ -8,6 +8,8 @@ using System.Xml.Linq;
 using System.Globalization;
 using System.Diagnostics;
 
+using TestAdapter.Settings;
+
 namespace CatchTestAdapter
 {
     [ExtensionUri(ExecutorUriString)]
@@ -23,10 +25,14 @@ namespace CatchTestAdapter
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with source " + sources.First());
-            foreach(var exeName in sources)
+            // Load settings from the context.
+            var settings = CatchSettingsProvider.LoadSettings( runContext.RunSettings );
+
+            // Run tests in all included executables.
+            foreach(var exeName in sources.Where(name => settings.IncludeTestExe(name) ) )
             {
-                var  tests = TestDiscoverer.CreateTestCases(exeName);
+                frameworkHandle.SendMessage( TestMessageLevel.Informational, "RunTest with source " + sources.First() );
+                var tests = TestDiscoverer.CreateTestCases( exeName );
                 RunTests(tests, runContext, frameworkHandle);
             }
         }

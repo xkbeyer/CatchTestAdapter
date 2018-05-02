@@ -22,11 +22,13 @@ namespace TestAdapterTest.Mocks
 
         public string SolutionDirectory => throw new NotImplementedException();
 
-        public IRunSettings RunSettings => throw new NotImplementedException();
+        public IRunSettings RunSettings => this.MockSettings;
 
         public ITestCaseFilterExpression GetTestCaseFilter( IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider )
         {
             throw new NotImplementedException();
         }
+
+        public MockRunSettings MockSettings { get; set; } = new MockRunSettings();
     }
 }
