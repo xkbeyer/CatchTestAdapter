@@ -39,9 +39,9 @@ namespace CatchTestAdapter
         public static IList<TestCase> CreateTestCases( string exeName )
         {
             var testCases = new List<TestCase>();
-            var p = new ProcessRunner(exeName, "--list-tests --verbosity high");
+            var output = ProcessRunner.RunProcess(exeName, "--list-tests --verbosity high");
 
-            foreach (var test in ParseListing( exeName, p.Output ) )
+            foreach (var test in ParseListing( exeName, output ) )
             {
                 testCases.Add( test );
             }
