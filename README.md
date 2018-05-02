@@ -1,30 +1,23 @@
-CatchTestAdapter
-======
-A Visual Studio Extension to run Catch unit tests within the Visual Studio TestExplorer. 
+# CatchTestAdapter
+A Visual Studio Extension to run [Catch](https://github.com/catchorg/Catch2) unit tests within the Visual Studio TestExplorer. 
 
-Installation
-============
-After building the project in release mode the CatchTestAdapter.vsix file is located in the bin\Release folder.
+### Installation
+Use the latest [CatchTestAdapter.vsix](https://github.com/xkbeyer/CatchTestAdapter/releases/latest). 
 
-Usage
-=====
-After installation VS uses the TestAdapter.
-
-Status
-======
+### Status
 - Test cases are shown after discovery process. 
 - Test result are shown.
 - Stack trace link to the source line works now. 
-- Scenario 
-- BDD
-- 2018-03-10 Tested with Visual Studio Community 2017.
+- Section
+- BDD Scenario
+- Traits
+- Tested with Visual Studio Community 2017.
 
-Test
-====
-The Adapter is tested against the Solution in [CatchUnitTestRef](https://github.com/xkbeyer/CatchUnitTestRef)
+### Test
+The Adapter is tested against the Solution in [CatchUnitTestRef](https://github.com/xkbeyer/CatchUnitTestRef) and the [TestAdapterTest](https://github.com/xkbeyer/CatchTestAdapter/tree/master/TestAdapterTest).
 
-Settings
-========
+### Settings
+
 You can configure the adapter by adding a `CatchAdapter` element to your .runsettings file.
 
 ```xml
@@ -46,8 +39,8 @@ You can configure the adapter by adding a `CatchAdapter` element to your .runset
 </RunSettings>
 ```
 
-TODO
-====
-- More tests in ReferenceCatchProject (may be combined with the test repo).
-- Clean up dependencies.
+### TODO
+
+- More tests in ReferenceCatchProject (may be combined with the CatchUnitTestRef test repo).
 - Test with VS2015.
+- May be an option page to set some Catch test runner arguments.
