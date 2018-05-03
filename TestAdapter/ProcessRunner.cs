@@ -44,7 +44,7 @@ namespace CatchTestAdapter
 			{
 				env.Add( key, (string)ourEnv[ key ] );
 			}
-            int pid = frameworkHandle.LaunchProcessWithDebuggerAttached( cmd, @".", args, env );
+            int pid = frameworkHandle.LaunchProcessWithDebuggerAttached( cmd, System.Environment.CurrentDirectory, args, env );
             using ( Process process = Process.GetProcessById( pid ) )
             {
                 while ( process.StandardOutput.Peek() > 0 )
