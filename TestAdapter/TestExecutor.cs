@@ -28,24 +28,27 @@ namespace CatchTestAdapter
             // Load settings from the context.
             var settings = CatchSettingsProvider.LoadSettings( runContext.RunSettings );
 
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with source " + sources.First());
-            try
+            frameworkHandle.SendMessage(TestMessageLevel.Informational, "CatchAdapter::RunTests... " );
+
+            // Run tests in all included executables.
+            foreach ( var exeName in sources.Where( name => settings.IncludeTestExe( name ) ) )
             {
-                // Run tests in all included executables.
-                foreach(var exeName in sources.Where(name => settings.IncludeTestExe(name) ) )
+                // Wrap execution in try to stop one executable's exceptions from stopping the others from being run.
+                try
                 {
+                    frameworkHandle.SendMessage( TestMessageLevel.Informational, "RunTest with source " + exeName );
                     var tests = TestDiscoverer.CreateTestCases( exeName );
                     RunTests( tests, runContext, frameworkHandle );
                 }
-            }
-            catch ( Microsoft.VisualStudio.TestPlatform.ObjectModel.TestPlatformException ex )
-            {
-                frameworkHandle.SendMessage( TestMessageLevel.Error, ex.Message );
-            }
-            catch ( Exception ex )
-            {
-                frameworkHandle.SendMessage( TestMessageLevel.Error, "Test platform exception: " + ex.Message );
-                frameworkHandle.SendMessage( TestMessageLevel.Error, "Test platform exception stack: " + ex.StackTrace );
+                catch ( Microsoft.VisualStudio.TestPlatform.ObjectModel.TestPlatformException ex )
+                {
+                    frameworkHandle.SendMessage( TestMessageLevel.Error, ex.Message );
+                }
+                catch ( Exception ex )
+                {
+                    frameworkHandle.SendMessage( TestMessageLevel.Error, "Test platform exception: " + ex.Message );
+                    frameworkHandle.SendMessage( TestMessageLevel.Error, "Test platform exception stack: " + ex.StackTrace );
+                }
             }
         }
 
