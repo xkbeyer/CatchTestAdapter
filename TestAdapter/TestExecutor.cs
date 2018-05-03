@@ -40,14 +40,10 @@ namespace CatchTestAdapter
                     var tests = TestDiscoverer.CreateTestCases( exeName );
                     RunTests( tests, runContext, frameworkHandle );
                 }
-                catch ( Microsoft.VisualStudio.TestPlatform.ObjectModel.TestPlatformException ex )
-                {
-                    frameworkHandle.SendMessage( TestMessageLevel.Error, ex.Message );
-                }
                 catch ( Exception ex )
                 {
-                    frameworkHandle.SendMessage( TestMessageLevel.Error, "Test platform exception: " + ex.Message );
-                    frameworkHandle.SendMessage( TestMessageLevel.Error, "Test platform exception stack: " + ex.StackTrace );
+                    frameworkHandle.SendMessage( TestMessageLevel.Error, "Exception running tests: " + ex.Message );
+                    frameworkHandle.SendMessage( TestMessageLevel.Error, "Exception stack: " + ex.StackTrace );
                 }
             }
         }
