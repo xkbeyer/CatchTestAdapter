@@ -44,14 +44,28 @@ namespace CatchTestAdapter
         /// <returns></returns>
         public static IList<string> RunDebugProcess( IFrameworkHandle frameworkHandle, string cmd, string args )
         {
-            // Tell the framework to run the process in a debugger.
-            int pid = frameworkHandle.LaunchProcessWithDebuggerAttached( cmd, System.Environment.CurrentDirectory, args, new Dictionary<string, string>() );
+            // We cannot reliably capture the output of a process launched by the framework.
+            // We store the output in a temp file instead.
+            string exeName = System.IO.Path.GetFileName( cmd );
+            string outputFile = exeName + ".catchout.xml";
+            string argsWithOutFile = args + $" --out \"{outputFile}\"";
 
-            // Get the process's output.
+            // Tell the framework to run the process in a debugger.
+            int pid = frameworkHandle.LaunchProcessWithDebuggerAttached(
+                cmd, System.Environment.CurrentDirectory,
+                argsWithOutFile, new Dictionary<string, string>() );
+
+            // Wait for exit.
             using ( Process process = Process.GetProcessById( pid ) )
             {
-                return GetProcessOutput( process );
+                process.WaitForExit();
             }
+
+            // Get the output.
+            var outputLines = new List<string>( System.IO.File.ReadAllLines( outputFile ) );
+            System.IO.File.Delete( outputFile );
+
+            return outputLines;
         }
 
         private static IList<string> GetProcessOutput( Process process )
