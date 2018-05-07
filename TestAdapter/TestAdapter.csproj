@@ -60,6 +60,7 @@
     <Reference Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CatchTestCase.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="Settings\CatchAdapterSettings.cs" />
     <Compile Include="Settings\CatchSettingsProvider.cs" />
