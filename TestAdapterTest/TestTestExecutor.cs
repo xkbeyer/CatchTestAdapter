@@ -33,7 +33,9 @@ namespace TestAdapterTest
         public void TestExecutableWithSpaces()
         {
             // Copy the reference exe to a path with a space.
-            string spaceExe = Directory.GetCurrentDirectory() + "\\" + "Test Space.exe";
+            string spaceDir = Directory.GetCurrentDirectory() + "\\C++ Space - Test";
+            string spaceExe = spaceDir + "\\Test Space.exe";
+            Directory.CreateDirectory( spaceDir );
             File.Copy( Common.ReferenceExePath, spaceExe );
 
             // Set up a fake testing context.
@@ -45,6 +47,7 @@ namespace TestAdapterTest
 
             // Remove the copy.
             File.Delete( spaceExe );
+            Directory.Delete( spaceDir, true );
 
             // Make sure we got results for all.
             Assert.AreEqual( Common.ReferenceTestCount, framework.Results.Count );
