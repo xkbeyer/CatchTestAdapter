@@ -138,7 +138,7 @@ namespace CatchTestAdapter
             // Execute the tests
             IList<string> output_text;
 
-            string arguments = "-r xml --durations yes --input-file " + CatchExe + ".testcases";
+            string arguments = "-r xml --durations yes --input-file \"" + CatchExe + ".testcases\"";
             if ( runContext.IsBeingDebugged )
             {
                 output_text = ProcessRunner.RunDebugProcess( frameworkHandle, CatchExe, arguments );
