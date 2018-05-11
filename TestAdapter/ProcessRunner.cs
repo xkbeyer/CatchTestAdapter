@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace CatchTestAdapter
 {
@@ -23,7 +24,7 @@ namespace CatchTestAdapter
             var processStartInfo = new ProcessStartInfo( cmd, args )
             {
                 RedirectStandardOutput = true,
-                RedirectStandardError = false,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WorkingDirectory = @"."
@@ -72,9 +73,32 @@ namespace CatchTestAdapter
         {
             // Get output from the process.
             var outputLines = new List<string>();
-            while ( !process.StandardOutput.EndOfStream )
+            process.OutputDataReceived += ( object sender, DataReceivedEventArgs e ) =>
             {
-                outputLines.Add( process.StandardOutput.ReadLine() );
+                if( e.Data != null )
+                    outputLines.Add( e.Data );
+            };
+
+            var errorString = new StringBuilder();
+            process.ErrorDataReceived += ( object sender, DataReceivedEventArgs e ) =>
+            {
+                if( e.Data != null )
+                    errorString.AppendLine( e.Data );
+            };
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            string processName = process.ProcessName;
+            string processArguments = process.StartInfo.Arguments;
+
+            process.WaitForExit();
+
+            // Catch returns the number of failed or found tests as the exit code,
+            // so we cannot use a simple compare to zero. It uses 255 for errors instead.
+            if ( process.ExitCode == 255 )
+            {
+                throw new System.Exception( $"Failed executing '{processName} {processArguments}'. Exit code {process.ExitCode}. StdErr: '{errorString}'" );
             }
 
             return outputLines;
