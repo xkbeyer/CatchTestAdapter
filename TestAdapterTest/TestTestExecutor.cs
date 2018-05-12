@@ -7,6 +7,7 @@ using CatchTestAdapter;
 using TestAdapterTest.Mocks;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using System.IO;
 
 namespace TestAdapterTest
 {
@@ -23,6 +24,30 @@ namespace TestAdapterTest
             // Execute all tests.
             TestExecutor executor = new TestExecutor();
             executor.RunTests( Common.ReferenceExeList, new MockRunContext(), framework );
+
+            // Make sure we got results for all.
+            Assert.AreEqual( Common.ReferenceTestCount, framework.Results.Count );
+        }
+
+        [TestMethod]
+        public void TestExecutableWithSpaces()
+        {
+            // Copy the reference exe to a path with a space.
+            string spaceDir = Directory.GetCurrentDirectory() + "\\C++ Space - Test";
+            string spaceExe = spaceDir + "\\Test Space.exe";
+            Directory.CreateDirectory( spaceDir );
+            File.Copy( Common.ReferenceExePath, spaceExe );
+
+            // Set up a fake testing context.
+            var framework = new MockFrameworkHandle();
+
+            // Execute all tests.
+            TestExecutor executor = new TestExecutor();
+            executor.RunTests( new List<string>() { spaceExe }, new MockRunContext(), framework );
+
+            // Remove the copy.
+            File.Delete( spaceExe );
+            Directory.Delete( spaceDir, true );
 
             // Make sure we got results for all.
             Assert.AreEqual( Common.ReferenceTestCount, framework.Results.Count );

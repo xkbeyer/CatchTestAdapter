@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System.Xml.Linq;
+using System.IO;
 using System.Globalization;
 using System.Diagnostics;
 
@@ -131,14 +132,16 @@ namespace CatchTestAdapter
             
             // Get a list of all test case names
             var listOfTestCases = tests.Aggregate("", (acc, test) => acc + test.DisplayName + "\n");
-            
+
             // Write them to the input file for Catch runner
-            System.IO.File.WriteAllText(CatchExe + ".testcases", listOfTestCases);
+            string caseFile = "test.cases";
+            System.IO.File.WriteAllText(caseFile, listOfTestCases);
+            string originalDirectory = Directory.GetCurrentDirectory();
 
             // Execute the tests
             IList<string> output_text;
 
-            string arguments = "-r xml --durations yes --input-file " + CatchExe + ".testcases";
+            string arguments = "-r xml --durations yes --input-file=" + caseFile;
             if ( runContext.IsBeingDebugged )
             {
                 output_text = ProcessRunner.RunDebugProcess( frameworkHandle, CatchExe, arguments );
@@ -199,7 +202,7 @@ namespace CatchTestAdapter
                 frameworkHandle.RecordResult(testResult);
             }
             // Remove the temporary input file.
-            System.IO.File.Delete(CatchExe + ".testcases");
+            System.IO.File.Delete(caseFile);
         }
     }
 }
