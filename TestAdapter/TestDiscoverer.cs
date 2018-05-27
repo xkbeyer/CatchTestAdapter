@@ -127,7 +127,8 @@ namespace CatchTestAdapter
             // The first line should be fixed.
             if( !line.MoveNext() || line.Current != "All available test cases:" )
             {
-                throw new Exception( "Unexpected line in catch output: " + line.Current );
+                yield break;
+                //throw new Exception( "Unexpected line in catch output: " + line.Current );
             }
 
             // Split output to groups of lines related to the same test case.

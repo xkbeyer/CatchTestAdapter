@@ -19,8 +19,8 @@ namespace TestAdapterTest
         // Tests that all the tests in the reference project are found.
         [TestMethod]
         [DeploymentItem( Common.ReferenceExePath )]
-		public void DiscoversAllTests()
-		{
+        public void DiscoversAllTests()
+        {
             // Initialize a mock sink to keep track of the discovered tests.
             MockTestCaseDiscoverySink testSink = new MockTestCaseDiscoverySink();
 
@@ -144,6 +144,27 @@ namespace TestAdapterTest
 
             // There should be no tests, as nothing matches the filter.
             Assert.AreEqual( testSink.Tests.Count, 0 );
+        }
+
+        // Tests that a non Catch exe returns no test cases.
+        [TestMethod]
+        public void DiscoversNoTests()
+        {
+            // Initialize a mock sink to keep track of the discovered tests.
+            MockTestCaseDiscoverySink testSink = new MockTestCaseDiscoverySink();
+
+            TestDiscoverer discoverer = new TestDiscoverer();
+            var cd = System.IO.Directory.GetCurrentDirectory();
+            // Unfortunately it doesn't get copied with the DeployItemAttribute, no idea why.
+            System.IO.File.WriteAllText(@"nonecatchexe.cmd", @"@echo Non Catch Output line");
+            // Returns an unexpected first line.
+            discoverer.DiscoverTests(new List<String>(){ @"nonecatchexe.cmd" }, 
+                new MockDiscoveryContext(),
+                new MockMessageLogger(),
+                testSink);
+
+            // Zero test cases should be registered.
+            Assert.AreEqual(0, testSink.Tests.Count);
         }
     }
 }
