@@ -21,17 +21,24 @@ namespace CatchTestAdapter
             // Load settings from the discovery context.
             CatchAdapterSettings settings = CatchSettingsProvider.LoadSettings( discoveryContext.RunSettings );
 
-            //System.Diagnostics.Debugger.Launch();
-            foreach (var src in sources.Where( src => settings.IncludeTestExe(src) ))
+            try
             {
-                logger.SendMessage( TestMessageLevel.Informational, $"Processing catch test source: '{src}'..." );
-
-                var testCases = CreateTestCases(src);
-                foreach (var t in testCases)
+                foreach (var src in sources.Where(src => settings.IncludeTestExe(src)))
                 {
-                    discoverySink.SendTestCase(t);
-                    logger.SendMessage(TestMessageLevel.Informational, t.DisplayName);
+                    logger.SendMessage(TestMessageLevel.Informational, $"Processing catch test source: '{src}'...");
+
+                    var testCases = CreateTestCases(src);
+                    foreach (var t in testCases)
+                    {
+                        discoverySink.SendTestCase(t);
+                        logger.SendMessage(TestMessageLevel.Informational, t.DisplayName);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                // Just log the error message.
+                logger.SendMessage(TestMessageLevel.Error, ex.Message);
             }
         }
 
