@@ -133,9 +133,16 @@ namespace CatchTestAdapter
             // Get a list of all test case names
             var listOfTestCases = tests.Aggregate("", (acc, test) => acc + test.DisplayName + "\n");
 
+            // Use the directory of the executable as the working directory.
+            string workingDirectory = System.IO.Path.GetDirectoryName( CatchExe );
+            if ( workingDirectory == "" )
+                workingDirectory = ".";
+
             // Write them to the input file for Catch runner
             string caseFile = "test.cases";
-            System.IO.File.WriteAllText(caseFile, listOfTestCases);
+            System.IO.File.WriteAllText(
+				workingDirectory + System.IO.Path.DirectorySeparatorChar + caseFile,
+				listOfTestCases);
             string originalDirectory = Directory.GetCurrentDirectory();
 
             // Execute the tests
@@ -144,11 +151,11 @@ namespace CatchTestAdapter
             string arguments = "-r xml --durations yes --input-file=" + caseFile;
             if ( runContext.IsBeingDebugged )
             {
-                output_text = ProcessRunner.RunDebugProcess( frameworkHandle, CatchExe, arguments );
+                output_text = ProcessRunner.RunDebugProcess( frameworkHandle, CatchExe, arguments, workingDirectory );
             }
             else
             {
-                output_text = ProcessRunner.RunProcess( CatchExe, arguments );
+                output_text = ProcessRunner.RunProcess( CatchExe, arguments, workingDirectory );
             }
 
             timer.Stop();
