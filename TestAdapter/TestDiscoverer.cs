@@ -46,7 +46,11 @@ namespace CatchTestAdapter
         public static IList<TestCase> CreateTestCases( string exeName )
         {
             var testCases = new List<TestCase>();
-            var output = ProcessRunner.RunProcess(exeName, "--list-tests --verbosity high");
+
+            // Use the directory of the executable as the working directory.
+            string workingDirectory = System.IO.Path.GetDirectoryName( exeName );
+
+            var output = ProcessRunner.RunProcess(exeName, "--list-tests --verbosity high", workingDirectory);
 
             foreach (var test in ParseListing( exeName, output ) )
             {

@@ -10,7 +10,7 @@ namespace CatchTestAdapter
     /// <summary>
     /// Runs external processes.
     /// </summary>
-    class ProcessRunner
+    public class ProcessRunner
     {
         /// <summary>
         /// Execute a plain external process.
@@ -18,7 +18,7 @@ namespace CatchTestAdapter
         /// <param name="cmd">Path to executable.</param>
         /// <param name="args">Command line arguments.</param>
         /// <returns></returns>
-        public static IList<string> RunProcess(string cmd, string args )
+        public static IList<string> RunProcess(string cmd, string args, string workingDirectory )
         {
             // Start a new process.
             var processStartInfo = new ProcessStartInfo( cmd, args )
@@ -27,7 +27,7 @@ namespace CatchTestAdapter
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                WorkingDirectory = @"."
+                WorkingDirectory = workingDirectory
             };
 
             using ( Process process = Process.Start( processStartInfo ) )
@@ -43,7 +43,7 @@ namespace CatchTestAdapter
         /// <param name="cmd">The executable.</param>
         /// <param name="args">Command-line parameters.</param>
         /// <returns></returns>
-        public static IList<string> RunDebugProcess( IFrameworkHandle frameworkHandle, string cmd, string args )
+        public static IList<string> RunDebugProcess( IFrameworkHandle frameworkHandle, string cmd, string args, string workingDirectory )
         {
             // We cannot reliably capture the output of a process launched by the framework.
             // We store the output in a temp file instead.
@@ -53,7 +53,7 @@ namespace CatchTestAdapter
 
             // Tell the framework to run the process in a debugger.
             int pid = frameworkHandle.LaunchProcessWithDebuggerAttached(
-                cmd, System.Environment.CurrentDirectory,
+                cmd, workingDirectory,
                 argsWithOutFile, new Dictionary<string, string>() );
 
             // Wait for exit.
@@ -63,7 +63,8 @@ namespace CatchTestAdapter
             }
 
             // Get the output.
-            var outputLines = new List<string>( System.IO.File.ReadAllLines( outputFile ) );
+            var outputLines = new List<string>( System.IO.File.ReadAllLines( workingDirectory +
+				System.IO.Path.DirectorySeparatorChar + outputFile ) );
             System.IO.File.Delete( outputFile );
 
             return outputLines;

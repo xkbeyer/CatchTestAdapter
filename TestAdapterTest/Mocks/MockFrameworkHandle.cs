@@ -29,7 +29,8 @@ namespace TestAdapterTest.Mocks
 
         public int LaunchProcessWithDebuggerAttached( string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables )
         {
-            throw new NotImplementedException();
+            CatchTestAdapter.ProcessRunner.RunProcess( filePath, arguments, workingDirectory );
+            return 0;
         }
 
         public void RecordAttachments( IList<AttachmentSet> attachmentSets )
