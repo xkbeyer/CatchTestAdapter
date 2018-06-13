@@ -27,8 +27,6 @@ namespace TestAdapter.Settings
 
         #region Settings
 
-        private List<string> testExeInclude = new List<string>();
-
         /// <summary>
         /// Regex used to find test executables.
         /// </summary>
@@ -38,7 +36,7 @@ namespace TestAdapter.Settings
         {
             get;
             set;
-        }
+        } = new List<string>();
 
         /// <summary>
         /// Regex used to exclude test executables.

@@ -20,9 +20,14 @@ namespace CatchTestAdapter.Settings
     /// </summary>
     [Export( typeof( IRunSettingsService ) )]
     [SettingsName( CatchAdapterSettings.XmlRoot )]
-    class CatchSettingsService : IRunSettingsService
+    public class CatchSettingsService : IRunSettingsService
     {
         public string Name => CatchAdapterSettings.XmlRoot;
+
+        public CatchSettingsService()
+        {
+            System.Diagnostics.Debugger.Launch();
+        }
 
         /// <summary>
         /// I believe this will be called to augment the run settings.
@@ -38,6 +43,7 @@ namespace CatchTestAdapter.Settings
         {
             // This shall contain the merged settings.
             CatchAdapterSettings settings = new CatchAdapterSettings();
+            System.Diagnostics.Debugger.Launch();
 
             // Try to find an existing catch configuration node.
             XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
@@ -54,6 +60,12 @@ namespace CatchTestAdapter.Settings
 
                 // Erase the original.
                 navigator.DeleteSelf();
+            }
+
+            // If there are no filters, add a default.
+            if( settings.TestExeInclude.Count < 1 && settings.TestExeExclude.Count < 1 )
+            {
+                settings.TestExeInclude.Add( @"*\.Test\.exe" );
             }
 
             // Write the resolved settings to the xml.

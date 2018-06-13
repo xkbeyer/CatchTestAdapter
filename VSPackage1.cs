@@ -35,6 +35,7 @@ namespace CatchTestAdapter
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideOptionPage( typeof( CatchAdapterOptionsPage ),
         "Catch Adapter", "General", 0, 0, true )]
+    [ProvideAutoLoad( Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists )]
     public sealed class VSPackage1 : Package
     {
         /// <summary>
