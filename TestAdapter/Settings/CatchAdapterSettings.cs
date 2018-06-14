@@ -88,5 +88,17 @@ namespace TestAdapter.Settings
 
             return doc.DocumentElement;
         }
+
+        /// <summary>
+        /// Combine the settings in an other instance with the settings in this one.
+        /// The settings in other overwrite settings in this.
+        /// </summary>
+        /// <param name="other"></param>
+        public void MergeFrom( CatchAdapterSettings other )
+        {
+            // Combine the xclusion lists.
+            this.TestExeInclude.AddRange( other.TestExeInclude );
+            this.TestExeExclude.AddRange( other.TestExeExclude );
+        }
     }
 }

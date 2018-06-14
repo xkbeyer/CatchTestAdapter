@@ -89,21 +89,20 @@ namespace TestAdapter.Settings
             System.Diagnostics.Debugger.Launch();
 
             // Try to find an existing catch configuration node.
+            var settingsFromContext = MaybeReadSettingsFromXml( inputRunSettingDocument );
             XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
-            navigator.MoveToFirstChild();
-            if( !navigator.MoveToChild( CatchAdapterSettings.XmlRoot, "" ) )
+            if( settingsFromContext == null )
             {
                 log.Log( MessageLevel.Informational, $"No '{CatchAdapterSettings.XmlRoot}' node in runsettings." );
             }
             else
             {
-                // Catch adapter settings found. Try to read them.
-                XmlReader reader = XmlReader.Create( new MemoryStream( Encoding.UTF8.GetBytes( navigator.OuterXml ) ) );
-                XmlSerializer serializer = new XmlSerializer( typeof( CatchAdapterSettings ) );
-                settings = serializer.Deserialize( reader ) as CatchAdapterSettings ?? settings;
+                // Merge the settings from the context.
+                settings.MergeFrom( settingsFromContext );
 
                 // Erase the original.
-                navigator.DeleteSelf();
+                if( navigator.MoveToFollowing( CatchAdapterSettings.XmlRoot, "" ) )
+                    navigator.DeleteSelf();
             }
 
             // If there are no filters, add a default.
@@ -122,6 +121,33 @@ namespace TestAdapter.Settings
             // Clean up the navigator.
             navigator.MoveToRoot();
             return navigator;
+        }
+
+        private CatchAdapterSettings ReadSettingsFromFile( string filename )
+        {
+            XPathDocument doc = new XPathDocument( filename );
+            XPathNavigator navigator = doc.CreateNavigator();
+            navigator.MoveToFollowing( CatchAdapterSettings.XmlRoot, "" );
+            return MaybeReadSettingsFromXml( navigator );
+        }
+
+        private CatchAdapterSettings MaybeReadSettingsFromXml( IXPathNavigable settingSource )
+        {
+            XPathNavigator navigator = settingSource.CreateNavigator();
+
+            if( navigator.MoveToFollowing( CatchAdapterSettings.XmlRoot, "" ) )
+            {
+
+                // Catch adapter settings found. Try to read them.
+                XmlReader reader = XmlReader.Create( new MemoryStream( Encoding.UTF8.GetBytes( navigator.OuterXml ) ) );
+                XmlSerializer serializer = new XmlSerializer( typeof( CatchAdapterSettings ) );
+                return serializer.Deserialize( reader ) as CatchAdapterSettings;
+            }
+            else
+            {
+                // No settings found.
+                return null;
+            }
         }
     }
 }
