@@ -16,10 +16,14 @@ namespace CatchTestAdapter
     {
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
         {
+            System.Diagnostics.Debugger.Launch();
             logger.SendMessage(TestMessageLevel.Informational, "Catch Discover in process ...");
 
             // Load settings from the discovery context.
             CatchAdapterSettings settings = CatchSettingsProvider.LoadSettings( discoveryContext.RunSettings );
+
+            logger.SendMessage( TestMessageLevel.Informational,
+                settings.TestExeInclude.Aggregate("Inclusion patterns: ", ( acc, add ) => acc + ", " + add ) );
 
             try
             {

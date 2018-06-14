@@ -8,6 +8,9 @@ using System.Xml;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.Xml.Serialization;
+using Microsoft.VisualStudio.TestWindow.Extensibility;
+using System.Xml.XPath;
+using System.IO;
 
 namespace TestAdapter.Settings
 {
@@ -15,13 +18,21 @@ namespace TestAdapter.Settings
     /// SettingsProvider used to register our interest in the "Catch" node.
     /// </summary>
     [Export( typeof( ISettingsProvider ) )]
+    [Export( typeof( IRunSettingsService ) )]
     [SettingsName( CatchAdapterSettings.XmlRoot )]
-    public class CatchSettingsProvider : ISettingsProvider
+    public class CatchSettingsProvider : ISettingsProvider, IRunSettingsService
     {
         /// <summary>
         /// Stored the last loaded settings, if any.
         /// </summary>
         public CatchAdapterSettings Settings { get; set; }
+
+        public string Name => CatchAdapterSettings.XmlRoot;
+
+        public CatchSettingsProvider()
+        {
+            // System.Diagnostics.Debugger.Launch();
+        }
 
         /// <summary>
         /// Load the settings from xml.
@@ -44,7 +55,8 @@ namespace TestAdapter.Settings
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static CatchAdapterSettings LoadSettings(IRunSettings runSettings )
+        public static CatchAdapterSettings LoadSettings(
+            Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings runSettings )
         {
             CatchAdapterSettings settings = new CatchAdapterSettings();
 
@@ -58,6 +70,59 @@ namespace TestAdapter.Settings
             }
 
             return settings;
+        }
+
+        /// <summary>
+        /// I believe this will be called to augment the run settings.
+        /// </summary>
+        /// <param name="inputRunSettingDocument"></param>
+        /// <param name="configurationInfo"></param>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        public IXPathNavigable AddRunSettings(
+            IXPathNavigable inputRunSettingDocument,
+            IRunSettingsConfigurationInfo configurationInfo,
+            ILogger log )
+        {
+            // This shall contain the merged settings.
+            CatchAdapterSettings settings = new CatchAdapterSettings();
+            System.Diagnostics.Debugger.Launch();
+
+            // Try to find an existing catch configuration node.
+            XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
+            navigator.MoveToFirstChild();
+            if( !navigator.MoveToChild( CatchAdapterSettings.XmlRoot, "" ) )
+            {
+                log.Log( MessageLevel.Informational, $"No '{CatchAdapterSettings.XmlRoot}' node in runsettings." );
+            }
+            else
+            {
+                // Catch adapter settings found. Try to read them.
+                XmlReader reader = XmlReader.Create( new MemoryStream( Encoding.UTF8.GetBytes( navigator.OuterXml ) ) );
+                XmlSerializer serializer = new XmlSerializer( typeof( CatchAdapterSettings ) );
+                settings = serializer.Deserialize( reader ) as CatchAdapterSettings ?? settings;
+
+                // Erase the original.
+                navigator.DeleteSelf();
+            }
+
+            // If there are no filters, add a default.
+            if( settings.TestExeInclude.Count < 1 && settings.TestExeExclude.Count < 1 )
+            {
+                settings.TestExeInclude.Add( @"*\.Test\.exe" );
+            }
+
+            // Write the resolved settings to the xml.
+            XPathNavigator settingsAsXml = settings.ToXml().CreateNavigator();
+            settingsAsXml.MoveToFirstChild();
+
+            navigator.MoveToRoot();
+            navigator.MoveToFirstChild();
+            navigator.AppendChild( settingsAsXml );
+
+            // Clean up the navigator.
+            navigator.MoveToRoot();
+            return navigator;
         }
     }
 }
