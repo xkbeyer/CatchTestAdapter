@@ -109,12 +109,11 @@ namespace TestAdapter.Settings
             // If there are no filters, add a default.
             if( settings.TestExeInclude.Count < 1 && settings.TestExeExclude.Count < 1 )
             {
-                settings.TestExeInclude.Add( @"*\.Test\.exe" );
+                settings.TestExeInclude.Add( @"\.Test\.exe" );
             }
 
             // Write the resolved settings to the xml.
             XPathNavigator settingsAsXml = settings.ToXml().CreateNavigator();
-            settingsAsXml.MoveToFirstChild();
 
             navigator.MoveToRoot();
             navigator.MoveToFirstChild();
