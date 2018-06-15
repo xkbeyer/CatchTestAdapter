@@ -87,7 +87,6 @@ namespace TestAdapter.Settings
         {
             // This shall contain the merged settings.
             CatchAdapterSettings settings = new CatchAdapterSettings();
-            // System.Diagnostics.Debugger.Launch();
 
             // First read settings from files.
             foreach(var file in FindSettingsInFoldersAbove( configurationInfo.SolutionDirectory, log ) )
@@ -114,7 +113,7 @@ namespace TestAdapter.Settings
             XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
             if( settingsFromContext == null )
             {
-                log.Log( MessageLevel.Informational, $"No '{CatchAdapterSettings.XmlRoot}' node in runsettings." );
+                log.Log( MessageLevel.Informational, $"No '{CatchAdapterSettings.XmlRoot}' node in explicit runsettings." );
             }
             else
             {
@@ -124,12 +123,6 @@ namespace TestAdapter.Settings
                 // Erase the original.
                 if( navigator.MoveToFollowing( CatchAdapterSettings.XmlRoot, "" ) )
                     navigator.DeleteSelf();
-            }
-
-            // If there are no filters, add a default.
-            if( settings.TestExeInclude.Count < 1 && settings.TestExeExclude.Count < 1 )
-            {
-                settings.TestExeInclude.Add( @"\.Test\.exe" );
             }
 
             // Write the resolved settings to the xml.
