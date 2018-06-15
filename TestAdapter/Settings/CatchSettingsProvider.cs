@@ -90,7 +90,7 @@ namespace TestAdapter.Settings
             // System.Diagnostics.Debugger.Launch();
 
             // First read settings from files.
-            foreach(var file in FindSettingsInFoldersAbove( configurationInfo.SolutionDirectory ) )
+            foreach(var file in FindSettingsInFoldersAbove( configurationInfo.SolutionDirectory, log ) )
             {
                 try
                 {
@@ -105,7 +105,7 @@ namespace TestAdapter.Settings
                 catch(IOException ex )
                 {
                     log.Log( MessageLevel.Warning,
-                        $"Failed to read test run settings from file '$file'. Exception: ${ex.ToString()}" );
+                        $"Failed to read test run settings from file '${file}'. Exception: ${ex.ToString()}" );
                 }
             }
 
@@ -147,9 +147,7 @@ namespace TestAdapter.Settings
         private CatchAdapterSettings MaybeReadSettingsFromFile( string filename )
         {
             XPathDocument doc = new XPathDocument( filename );
-            XPathNavigator navigator = doc.CreateNavigator();
-            navigator.MoveToFollowing( CatchAdapterSettings.XmlRoot, "" );
-            return MaybeReadSettingsFromXml( navigator );
+            return MaybeReadSettingsFromXml( doc );
         }
 
         private CatchAdapterSettings MaybeReadSettingsFromXml( IXPathNavigable settingSource )
@@ -177,7 +175,8 @@ namespace TestAdapter.Settings
         /// </summary>
         /// <param name="initialFolder"></param>
         /// <returns></returns>
-        IEnumerable<string> FindSettingsInFoldersAbove( string initialFolder )
+        IEnumerable<string> FindSettingsInFoldersAbove( string initialFolder,
+            ILogger log )
         {
             // Get the full path.
             string fullPath = Path.GetFullPath( initialFolder );
@@ -189,15 +188,17 @@ namespace TestAdapter.Settings
             var currentPath = "";
             foreach(string component in pathComponents )
             {
-                currentPath = Path.Combine( currentPath, component );
+                currentPath = currentPath + component + Path.DirectorySeparatorChar;
                 IEnumerable<string> files = new string[0];
                 try
                 {
-                    files = Directory.EnumerateFiles( currentPath, "*.runsettings" );
+                    files = Directory.EnumerateFiles( currentPath, "*.runsettings" ).ToArray();
                 }
-                catch(IOException)
+                catch(IOException ex)
                 {
                     // We may not have permission or something. Ignore silently.
+                    log.Log( MessageLevel.Informational,
+                        $"Error looking for settings at path $currentPath: ${ex.ToString()}." );
                 }
 
                 // Yield the found files.
