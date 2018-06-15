@@ -35,7 +35,7 @@ namespace TestAdapter.Settings
         public string Name => CatchAdapterSettings.XmlRoot;
 
         /// <summary>
-        /// Must have explicit constructor with the ImportingConstruxtorAttribute
+        /// Must have explicit constructor with the ImportingConstructorAttribute
         /// for Visual Studio to successfully initialize the RunSettingsService.
         /// </summary>
         [ImportingConstructor]

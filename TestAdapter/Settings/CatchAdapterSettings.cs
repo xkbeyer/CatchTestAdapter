@@ -32,11 +32,7 @@ namespace TestAdapter.Settings
         /// </summary>
         [XmlArray( "TestExeInclude" )]
         [XmlArrayItem( "Regex" )]
-        public List<string> TestExeInclude
-        {
-            get;
-            set;
-        } = new List<string>();
+        public List<string> TestExeInclude { get; set; } = new List<string>();
 
         /// <summary>
         /// Regex used to exclude test executables.
