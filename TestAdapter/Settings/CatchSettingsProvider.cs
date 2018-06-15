@@ -86,7 +86,27 @@ namespace TestAdapter.Settings
         {
             // This shall contain the merged settings.
             CatchAdapterSettings settings = new CatchAdapterSettings();
-            System.Diagnostics.Debugger.Launch();
+            // System.Diagnostics.Debugger.Launch();
+
+            // First read settings from files.
+            foreach(var file in FindSettingsInFoldersAbove( configurationInfo.SolutionDirectory ) )
+            {
+                try
+                {
+                    // Try to find settings from the file.
+                    var settingsFromFile = MaybeReadSettingsFromFile( file );
+                    if( settingsFromFile != null )
+                    {
+                        log.Log( MessageLevel.Informational, $"Reading test run settings from $file." );
+                        settings.MergeFrom( settingsFromFile );
+                    }
+                }
+                catch(IOException ex )
+                {
+                    log.Log( MessageLevel.Warning,
+                        $"Failed to read test run settings from file '$file'. Exception: ${ex.ToString()}" );
+                }
+            }
 
             // Try to find an existing catch configuration node.
             var settingsFromContext = MaybeReadSettingsFromXml( inputRunSettingDocument );
@@ -123,7 +143,7 @@ namespace TestAdapter.Settings
             return navigator;
         }
 
-        private CatchAdapterSettings ReadSettingsFromFile( string filename )
+        private CatchAdapterSettings MaybeReadSettingsFromFile( string filename )
         {
             XPathDocument doc = new XPathDocument( filename );
             XPathNavigator navigator = doc.CreateNavigator();
@@ -147,6 +167,43 @@ namespace TestAdapter.Settings
             {
                 // No settings found.
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Finds all runsettings files in folders above the provided one.
+        /// The files closest to root are returned first.
+        /// </summary>
+        /// <param name="initialFolder"></param>
+        /// <returns></returns>
+        IEnumerable<string> FindSettingsInFoldersAbove( string initialFolder )
+        {
+            // Get the full path.
+            string fullPath = Path.GetFullPath( initialFolder );
+
+            // Split the path to components.
+            var pathComponents = fullPath.Split( Path.DirectorySeparatorChar );
+
+            // Append the path components to each other to process each intermediate folder.
+            var currentPath = "";
+            foreach(string component in pathComponents )
+            {
+                currentPath = Path.Combine( currentPath, component );
+                IEnumerable<string> files = new string[0];
+                try
+                {
+                    files = Directory.EnumerateFiles( currentPath, "*.runsettings" );
+                }
+                catch(IOException)
+                {
+                    // We may not have permission or something. Ignore silently.
+                }
+
+                // Yield the found files.
+                foreach( string file in files )
+                {
+                    yield return file;
+                }
             }
         }
     }
