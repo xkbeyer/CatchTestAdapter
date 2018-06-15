@@ -68,6 +68,7 @@
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="Settings\CatchAdapterSettings.cs" />
     <Compile Include="Settings\CatchSettingsProvider.cs" />
+    <Compile Include="Settings\CatchSettingsService.cs" />
     <Compile Include="TestExecutor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestDiscoverer.cs" />
