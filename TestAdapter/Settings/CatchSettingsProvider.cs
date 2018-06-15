@@ -29,6 +29,7 @@ namespace TestAdapter.Settings
 
         public string Name => CatchAdapterSettings.XmlRoot;
 
+        [ImportingConstructor]
         public CatchSettingsProvider()
         {
             // System.Diagnostics.Debugger.Launch();
