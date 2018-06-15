@@ -98,14 +98,14 @@ namespace TestAdapter.Settings
                     var settingsFromFile = MaybeReadSettingsFromFile( file );
                     if( settingsFromFile != null )
                     {
-                        log.Log( MessageLevel.Informational, $"Reading test run settings from $file." );
+                        log.Log( MessageLevel.Informational, $"Reading test run settings from {file}." );
                         settings.MergeFrom( settingsFromFile );
                     }
                 }
                 catch(IOException ex )
                 {
                     log.Log( MessageLevel.Warning,
-                        $"Failed to read test run settings from file '${file}'. Exception: ${ex.ToString()}" );
+                        $"Failed to read test run settings from file '{file}'. Exception: {ex.ToString()}" );
                 }
             }
 
@@ -182,7 +182,8 @@ namespace TestAdapter.Settings
             string fullPath = Path.GetFullPath( initialFolder );
 
             // Split the path to components.
-            var pathComponents = fullPath.Split( Path.DirectorySeparatorChar );
+            var pathComponents = fullPath.Split( new char[] { Path.DirectorySeparatorChar },
+                StringSplitOptions.RemoveEmptyEntries );
 
             // Append the path components to each other to process each intermediate folder.
             var currentPath = "";
@@ -198,7 +199,7 @@ namespace TestAdapter.Settings
                 {
                     // We may not have permission or something. Ignore silently.
                     log.Log( MessageLevel.Informational,
-                        $"Error looking for settings at path $currentPath: ${ex.ToString()}." );
+                        $"Error looking for settings at path {currentPath}: {ex.ToString()}." );
                 }
 
                 // Yield the found files.
