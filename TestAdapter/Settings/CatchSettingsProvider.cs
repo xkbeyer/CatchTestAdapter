@@ -16,6 +16,8 @@ namespace TestAdapter.Settings
 {
     /// <summary>
     /// SettingsProvider used to register our interest in the "Catch" node.
+    /// Also provides an IRunSettingsService to provide Catch settings
+    /// even when a runsettings file is not manually specified.
     /// </summary>
     [Export( typeof( ISettingsProvider ) )]
     [Export( typeof( IRunSettingsService ) )]
@@ -27,12 +29,18 @@ namespace TestAdapter.Settings
         /// </summary>
         public CatchAdapterSettings Settings { get; set; }
 
+        /// <summary>
+        /// IRunSettingsService name.
+        /// </summary>
         public string Name => CatchAdapterSettings.XmlRoot;
 
+        /// <summary>
+        /// Must have explicit constructor with the ImportingConstruxtorAttribute
+        /// for Visual Studio to successfully initialize the RunSettingsService.
+        /// </summary>
         [ImportingConstructor]
         public CatchSettingsProvider()
         {
-            // System.Diagnostics.Debugger.Launch();
         }
 
         /// <summary>
@@ -74,12 +82,16 @@ namespace TestAdapter.Settings
         }
 
         /// <summary>
-        /// I believe this will be called to augment the run settings.
+        /// Visual studio calls this method on the IRunSettingsService to collect
+        /// run settings for tests adapters.
+        /// 
+        /// The settings are serialized as XML, because they need to be passed to the
+        /// test host service across a process boundary.
         /// </summary>
-        /// <param name="inputRunSettingDocument"></param>
-        /// <param name="configurationInfo"></param>
-        /// <param name="log"></param>
-        /// <returns></returns>
+        /// <param name="inputRunSettingDocument">Pre-existing run settings. Defaults or from a manually specified runsettings file.</param>
+        /// <param name="configurationInfo">Contextual information on the test run.</param>
+        /// <param name="log">Logger.</param>
+        /// <returns>The entire settings document, as it should be after our modifications.</returns>
         public IXPathNavigable AddRunSettings(
             IXPathNavigable inputRunSettingDocument,
             IRunSettingsConfigurationInfo configurationInfo,
@@ -88,32 +100,35 @@ namespace TestAdapter.Settings
             // This shall contain the merged settings.
             CatchAdapterSettings settings = new CatchAdapterSettings();
 
-            // First read settings from files.
-            foreach(var file in FindSettingsInFoldersAbove( configurationInfo.SolutionDirectory, log ) )
-            {
-                try
-                {
-                    // Try to find settings from the file.
-                    var settingsFromFile = MaybeReadSettingsFromFile( file );
-                    if( settingsFromFile != null )
-                    {
-                        log.Log( MessageLevel.Informational, $"Reading test run settings from {file}." );
-                        settings.MergeFrom( settingsFromFile );
-                    }
-                }
-                catch(IOException ex )
-                {
-                    log.Log( MessageLevel.Warning,
-                        $"Failed to read test run settings from file '{file}'. Exception: {ex.ToString()}" );
-                }
-            }
-
             // Try to find an existing catch configuration node.
             var settingsFromContext = MaybeReadSettingsFromXml( inputRunSettingDocument );
             XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
             if( settingsFromContext == null )
             {
-                log.Log( MessageLevel.Informational, $"No '{CatchAdapterSettings.XmlRoot}' node in explicit runsettings." );
+                // Note that explicit runsettings for catch were not provided.
+                log.Log( MessageLevel.Informational,
+                    $"No '{CatchAdapterSettings.XmlRoot}' node in explicit runsettings (or no explicit runsettins at all). "+
+                    "Searching for runsettings in solution directory and above." );
+
+                // Read settings from files.
+                foreach (var file in FindSettingsInFoldersAbove(configurationInfo.SolutionDirectory, log))
+                {
+                    try
+                    {
+                        // Try to find settings from the file.
+                        var settingsFromFile = MaybeReadSettingsFromFile(file);
+                        if (settingsFromFile != null)
+                        {
+                            log.Log(MessageLevel.Informational, $"Reading test run settings from {file}.");
+                            settings.MergeFrom(settingsFromFile);
+                        }
+                    }
+                    catch (IOException ex)
+                    {
+                        log.Log(MessageLevel.Warning,
+                            $"Failed to read test run settings from file '{file}'. Exception: {ex.ToString()}");
+                    }
+                }
             }
             else
             {
@@ -127,7 +142,6 @@ namespace TestAdapter.Settings
 
             // Write the resolved settings to the xml.
             XPathNavigator settingsAsXml = settings.ToXml().CreateNavigator();
-
             navigator.MoveToRoot();
             navigator.MoveToFirstChild();
             navigator.AppendChild( settingsAsXml );
@@ -137,12 +151,22 @@ namespace TestAdapter.Settings
             return navigator;
         }
 
+        /// <summary>
+        /// Read catch settings from a runsettings file. Return null if there are none.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
         private CatchAdapterSettings MaybeReadSettingsFromFile( string filename )
         {
             XPathDocument doc = new XPathDocument( filename );
             return MaybeReadSettingsFromXml( doc );
         }
 
+        /// <summary>
+        /// Read catch settings from XML. Return null if there are none.
+        /// </summary>
+        /// <param name="settingSource">An XML navigable that may contain catch adapter settings.</param>
+        /// <returns></returns>
         private CatchAdapterSettings MaybeReadSettingsFromXml( IXPathNavigable settingSource )
         {
             XPathNavigator navigator = settingSource.CreateNavigator();
@@ -167,6 +191,7 @@ namespace TestAdapter.Settings
         /// The files closest to root are returned first.
         /// </summary>
         /// <param name="initialFolder"></param>
+        /// <param name="log"></param>
         /// <returns></returns>
         IEnumerable<string> FindSettingsInFoldersAbove( string initialFolder,
             ILogger log )
@@ -186,6 +211,8 @@ namespace TestAdapter.Settings
                 IEnumerable<string> files = new string[0];
                 try
                 {
+                    // Find matching files.
+                    // Force evaluation to ensure errors occur inside the try.
                     files = Directory.EnumerateFiles( currentPath, "*.runsettings" ).ToArray();
                 }
                 catch(IOException ex)
