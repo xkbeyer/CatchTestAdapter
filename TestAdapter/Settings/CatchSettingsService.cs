@@ -11,6 +11,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using System.Xml.XPath;
 using System.IO;
+using EnvDTE;
 
 namespace TestAdapter.Settings
 {
@@ -28,13 +29,16 @@ namespace TestAdapter.Settings
         /// </summary>
         public string Name => CatchAdapterSettings.XmlRoot;
 
+        private DTE dte;
+
         /// <summary>
         /// Must have explicit constructor with the ImportingConstructorAttribute
         /// for Visual Studio to successfully initialize the RunSettingsService.
         /// </summary>
         [ImportingConstructor]
-        public CatchSettingsService()
+        public CatchSettingsService(Microsoft.VisualStudio.Shell.SVsServiceProvider serviceProvider)
         {
+            this.dte = (DTE)serviceProvider.GetService(typeof(DTE));
         }
 
         /// <summary>
@@ -67,7 +71,7 @@ namespace TestAdapter.Settings
                     "Searching for runsettings in solution directory and above.");
 
                 // Read settings from files.
-                foreach (var file in FindSettingsInFoldersAbove(configurationInfo.SolutionDirectory, log))
+                foreach (var file in FindSettingsInFoldersAbove( Path.GetDirectoryName( dte.Solution.FullName ), log))
                 {
                     try
                     {
@@ -146,14 +150,14 @@ namespace TestAdapter.Settings
         /// Finds all runsettings files in folders above the provided one.
         /// The files closest to root are returned first.
         /// </summary>
-        /// <param name="initialFolder"></param>
+        /// <param name="initialPath"></param>
         /// <param name="log"></param>
         /// <returns></returns>
-        IEnumerable<string> FindSettingsInFoldersAbove(string initialFolder,
+        IEnumerable<string> FindSettingsInFoldersAbove(string initialPath,
             ILogger log)
         {
             // Get the full path.
-            string fullPath = Path.GetFullPath(initialFolder);
+            string fullPath = Path.GetFullPath(initialPath);
 
             // Split the path to components.
             var pathComponents = fullPath.Split(new char[] { Path.DirectorySeparatorChar },
