@@ -19,6 +19,9 @@ The Adapter is tested against the Solution in [CatchUnitTestRef](https://github.
 ### Settings
 
 You can configure the adapter by adding a `CatchAdapter` element to your .runsettings file.
+If you do not manually set a runsettings file from the Test menu in Visual Studio, this
+adapter will look for `*.runsettings` files from the solution directory and all its ancestors.
+Settings closer to the solution take precedence, lists are merged.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
