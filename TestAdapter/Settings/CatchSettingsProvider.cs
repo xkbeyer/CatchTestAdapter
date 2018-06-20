@@ -23,6 +23,9 @@ namespace TestAdapter.Settings
         /// </summary>
         public CatchAdapterSettings Settings { get; set; }
 
+        [ImportingConstructor]
+        public CatchSettingsProvider() { }
+
         /// <summary>
         /// Load the settings from xml.
         /// </summary>

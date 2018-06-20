@@ -21,6 +21,9 @@ namespace CatchTestAdapter
             // Load settings from the discovery context.
             CatchAdapterSettings settings = CatchSettingsProvider.LoadSettings( discoveryContext.RunSettings );
 
+            logger.SendMessage( TestMessageLevel.Informational,
+                "Inclusion patterns: " + String.Join( ",", settings.TestExeInclude ) );
+
             try
             {
                 foreach (var src in sources.Where(src => settings.IncludeTestExe(src)))
