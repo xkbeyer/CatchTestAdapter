@@ -30,7 +30,7 @@ namespace CatchTestAdapter
                 {
                     logger.SendMessage(TestMessageLevel.Informational, $"Processing catch test source: '{src}'...");
 
-                    var testCases = CreateTestCases(src);
+                    var testCases = CreateTestCases(src, settings);
                     foreach (var t in testCases)
                     {
                         discoverySink.SendTestCase(t);
@@ -46,7 +46,7 @@ namespace CatchTestAdapter
         }
 
 
-        public static IList<TestCase> CreateTestCases( string exeName )
+        public static IList<TestCase> CreateTestCases( string exeName, CatchAdapterSettings settings )
         {
             var testCases = new List<TestCase>();
 
@@ -55,7 +55,7 @@ namespace CatchTestAdapter
 
             var output = ProcessRunner.RunProcess(exeName, "--list-tests --verbosity high", workingDirectory);
 
-            foreach (var test in ParseListing( exeName, output ) )
+            foreach (var test in ParseListing( exeName, settings, output) )
             {
                 testCases.Add( test );
             }
@@ -66,7 +66,7 @@ namespace CatchTestAdapter
         // Regular expression for separating file path and line number from catch output.
         static Regex lineInfoPattern = new Regex( @"(?<path>.*)\((?<line>\d+)\)$" );
 
-        private static TestCase LineGroupToTestCase( string exeName, IList<string> lineGroup )
+        private static TestCase LineGroupToTestCase( string exeName, CatchAdapterSettings settings, IList<string> lineGroup )
         {
             // The group needs to have at least three lines.
             if ( lineGroup.Count < 3 )
@@ -101,6 +101,9 @@ namespace CatchTestAdapter
             string path = lineInfoMatch.Groups[ "path" ].Value;
             int lineNumber = Int32.Parse( lineInfoMatch.Groups[ "line" ].Value );
 
+            // Resolve the path if it's relative using the configured search order, plus some hardcoded
+            path = settings.ResolvePath( path, System.IO.Path.GetDirectoryName(exeName), System.IO.Directory.GetCurrentDirectory() );
+
             // Construct the test.
             TestCase test = new TestCase( name, new Uri( TestExecutor.ExecutorUriString ), exeName );
             test.CodeFilePath = path;
@@ -126,7 +129,7 @@ namespace CatchTestAdapter
             return test;
         }
 
-        private static IEnumerable<TestCase> ParseListing( string exeName, IList<string> lines )
+        private static IEnumerable<TestCase> ParseListing( string exeName, CatchAdapterSettings settings, IList<string> lines )
         {
             // We manually enumerate through the lines of the output.
             IEnumerator<string> line = lines.GetEnumerator();
@@ -150,7 +153,7 @@ namespace CatchTestAdapter
                 if ( indent > 0 && indent < lastIndent )
                 {
                     // Yield the finished group.
-                    yield return LineGroupToTestCase( exeName, currentGroup );
+                    yield return LineGroupToTestCase( exeName, settings, currentGroup );
 
                     // Begin a new group.
                     currentGroup = new List<string>();
@@ -164,7 +167,7 @@ namespace CatchTestAdapter
             }
 
             // Yield the final group.
-            yield return LineGroupToTestCase( exeName, currentGroup );
+            yield return LineGroupToTestCase( exeName, settings, currentGroup);
         }
     }
 }
