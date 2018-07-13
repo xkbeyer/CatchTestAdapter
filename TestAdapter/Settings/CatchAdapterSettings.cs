@@ -41,6 +41,13 @@ namespace TestAdapter.Settings
         [XmlArrayItem( "Regex" )]
         public List<string> TestExeExclude { get; set; } = new List<string>();
 
+        /// <summary>
+        /// Path to be prepended to test source locations
+        /// </summary>
+        [XmlArray( "TestSourcePathRoots" )]
+        [XmlArrayItem( "Path" )]
+        public List<string> TestSourcePathRoots { get; set; } = new List<string>();
+
         #endregion
 
         #region Interpretations
@@ -95,6 +102,9 @@ namespace TestAdapter.Settings
             // Combine the xclusion lists.
             this.TestExeInclude.AddRange( other.TestExeInclude );
             this.TestExeExclude.AddRange( other.TestExeExclude );
+
+            // Combine the roots
+            this.TestSourcePathRoots.AddRange( other.TestSourcePathRoots );
         }
     }
 }

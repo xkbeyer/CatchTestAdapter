@@ -40,7 +40,7 @@ namespace CatchTestAdapter
                 try
                 {
                     frameworkHandle.SendMessage( TestMessageLevel.Informational, "RunTest with source " + exeName );
-                    var tests = TestDiscoverer.CreateTestCases( exeName );
+                    var tests = TestDiscoverer.CreateTestCases( exeName, settings );
                     RunTests( tests, runContext, frameworkHandle );
                 }
                 catch ( Exception ex )
