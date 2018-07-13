@@ -101,28 +101,8 @@ namespace CatchTestAdapter
             string path = lineInfoMatch.Groups[ "path" ].Value;
             int lineNumber = Int32.Parse( lineInfoMatch.Groups[ "line" ].Value );
 
-            // if the path isn't rooted, try to fix it up so that we can get back to the test source
-            if (!System.IO.Path.IsPathRooted(path))
-            {
-                string exeDir = System.IO.Path.GetDirectoryName(exeName);
-
-                // TODO -- add the solution root to the list, no idea how to get to it if we even can
-                List<string> maybePathRoots = settings.TestSourcePathRoots.ToList();
-                maybePathRoots.Add(exeDir);
-                maybePathRoots.Add(System.IO.Directory.GetCurrentDirectory());
-                foreach (string pathRoot in maybePathRoots)
-                {
-                    if (pathRoot == null)
-                        continue;
-
-                    string maybePath = System.IO.Path.Combine(pathRoot, path);
-                    if (System.IO.File.Exists(maybePath))
-                    {
-                        path = maybePath;
-                        break;
-                    }
-                }
-            }
+            // Resolve the path if it's relative using the configured search order, plus some hardcoded
+            path = settings.ResolvePath( path, System.IO.Path.GetDirectoryName(exeName), System.IO.Directory.GetCurrentDirectory() );
 
             // Construct the test.
             TestCase test = new TestCase( name, new Uri( TestExecutor.ExecutorUriString ), exeName );

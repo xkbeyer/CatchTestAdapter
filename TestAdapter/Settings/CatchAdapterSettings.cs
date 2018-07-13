@@ -106,5 +106,30 @@ namespace TestAdapter.Settings
             // Combine the roots
             this.TestSourcePathRoots.AddRange( other.TestSourcePathRoots );
         }
+
+        public string ResolvePath(string path, params string[] extra)
+        {
+            // if the path isn't rooted, try to fix it up so that we can get back to the test source
+            if (!System.IO.Path.IsPathRooted(path))
+            {
+                List<string> maybePathRoots = TestSourcePathRoots.ToList();
+                maybePathRoots.AddRange(extra);
+                foreach (string pathRoot in maybePathRoots)
+                {
+                    if (pathRoot == null)
+                        continue;
+
+                    string maybePath = System.IO.Path.Combine(pathRoot, path);
+                    if (System.IO.File.Exists(maybePath))
+                    {
+                        path = maybePath;
+                        break;
+                    }
+                }
+            }
+
+            return path;
+        }
+
     }
 }
