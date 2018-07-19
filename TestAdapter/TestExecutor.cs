@@ -20,6 +20,7 @@ namespace CatchTestAdapter
     {
         public const string ExecutorUriString = "executor://CatchTestRunner/v1";
         public static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
+        private string SolutionDirectory { get; set; } = "";
 
         public void Cancel()
         {
@@ -29,24 +30,23 @@ namespace CatchTestAdapter
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
             // Load settings from the context.
-            var settings = CatchSettingsProvider.LoadSettings( runContext.RunSettings );
-
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, "CatchAdapter::RunTests... " );
+            var settings = CatchSettingsProvider.LoadSettings(runContext.RunSettings);
+            frameworkHandle.SendMessage(TestMessageLevel.Informational, "CatchAdapter::RunTests... ");
 
             // Run tests in all included executables.
-            foreach ( var exeName in sources.Where( name => settings.IncludeTestExe( name ) ) )
+            foreach (var exeName in sources.Where(name => settings.IncludeTestExe(name)))
             {
                 // Wrap execution in try to stop one executable's exceptions from stopping the others from being run.
                 try
                 {
-                    frameworkHandle.SendMessage( TestMessageLevel.Informational, "RunTest with source " + exeName );
-                    var tests = TestDiscoverer.CreateTestCases( exeName );
-                    RunTests( tests, runContext, frameworkHandle );
+                    frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with source " + exeName);
+                    var tests = TestDiscoverer.CreateTestCases(exeName, runContext.SolutionDirectory);
+                    RunTests(tests, runContext, frameworkHandle);
                 }
-                catch ( Exception ex )
+                catch (Exception ex)
                 {
-                    frameworkHandle.SendMessage( TestMessageLevel.Error, "Exception running tests: " + ex.Message );
-                    frameworkHandle.SendMessage( TestMessageLevel.Error, "Exception stack: " + ex.StackTrace );
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, "Exception running tests: " + ex.Message);
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, "Exception stack: " + ex.StackTrace);
                 }
             }
         }
@@ -67,7 +67,7 @@ namespace CatchTestAdapter
         /// </summary>
         /// <param name="element"></param>
         /// <param name="name"></param>
-        void TryGetFailure( Tests.TestCase element, string name )
+        void TryGetFailure(Tests.TestCase element, string name)
         {
             // Get current level's name.
             name += element.Name;
@@ -86,7 +86,7 @@ namespace CatchTestAdapter
                         SectionPath = name,
                         Expression = $"{type}({original}) with expansion: ({expanded})",
                         LineNumber = Int32.Parse(expression.Line),
-                        FilePath = expression.Filename
+                        FilePath = TestDiscoverer.ResolvePath(expression.Filename, SolutionDirectory)
                     };
                     result.Add(res);
                 }
@@ -107,7 +107,7 @@ namespace CatchTestAdapter
                     SectionPath = name,
                     Expression = $"FAIL({element.Failure.text.Trim()})",
                     LineNumber = Int32.Parse(element.Failure.Line),
-                    FilePath = element.Failure.Filename
+                    FilePath = TestDiscoverer.ResolvePath(element.Failure.Filename, SolutionDirectory)
                 };
                 result.Add(res);
             }
@@ -118,7 +118,7 @@ namespace CatchTestAdapter
         /// </summary>
         /// <param name="testCase"></param>
         /// <returns>A list of all failure found.</returns>
-        List<FlatResult> GetFlatFailure( Tests.TestCase testCase )
+        List<FlatResult> GetFlatFailure(Tests.TestCase testCase)
         {
             result.Clear();
             TryGetFailure(testCase, "");
@@ -127,35 +127,34 @@ namespace CatchTestAdapter
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
+            SolutionDirectory = runContext.SolutionDirectory;
             var CatchExe = tests.First().Source;
             var timer = Stopwatch.StartNew();
-            
+
             // Get a list of all test case names
             var listOfTestCases = tests.Aggregate("", (acc, test) => acc + test.DisplayName + "\n");
 
             // Use the directory of the executable as the working directory.
-            string workingDirectory = System.IO.Path.GetDirectoryName( CatchExe );
-            if ( workingDirectory == "" )
+            string workingDirectory = System.IO.Path.GetDirectoryName(CatchExe);
+            if (workingDirectory == "")
                 workingDirectory = ".";
 
             // Write them to the input file for Catch runner
             string caseFile = "test.cases";
-            System.IO.File.WriteAllText(
-				workingDirectory + System.IO.Path.DirectorySeparatorChar + caseFile,
-				listOfTestCases);
+            System.IO.File.WriteAllText(workingDirectory + System.IO.Path.DirectorySeparatorChar + caseFile, listOfTestCases);
             string originalDirectory = Directory.GetCurrentDirectory();
 
             // Execute the tests
             IList<string> output_text;
 
             string arguments = "-r xml --durations yes --input-file=" + caseFile;
-            if ( runContext.IsBeingDebugged )
+            if (runContext.IsBeingDebugged)
             {
-                output_text = ProcessRunner.RunDebugProcess( frameworkHandle, CatchExe, arguments, workingDirectory );
+                output_text = ProcessRunner.RunDebugProcess(frameworkHandle, CatchExe, arguments, workingDirectory);
             }
             else
             {
-                output_text = ProcessRunner.RunProcess( CatchExe, arguments, workingDirectory );
+                output_text = ProcessRunner.RunProcess(CatchExe, arguments, workingDirectory);
             }
 
             timer.Stop();
@@ -166,7 +165,7 @@ namespace CatchTestAdapter
             System.IO.MemoryStream reader = new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes(output));
             var serializer = new XmlSerializer(typeof(CatchTestAdapter.Tests.Catch));
             var catchResult = (CatchTestAdapter.Tests.Catch)serializer.Deserialize(reader);
-            foreach ( var testCase in catchResult.TestCases)
+            foreach (var testCase in catchResult.TestCases)
             {
                 // Find the matching test case
                 var test = tests.Where((test_case) => test_case.DisplayName == testCase.Name).ElementAt(0);
@@ -186,12 +185,12 @@ namespace CatchTestAdapter
                     // Parse the failure to a flat result.
                     List<FlatResult> failures = GetFlatFailure(testCase);
                     testResult.ErrorMessage = $"{Environment.NewLine}";
-                    for(int i = 1; i<= failures.Count; ++i )
+                    for (int i = 1; i <= failures.Count; ++i)
                     {
-                        var failure = failures[i-1];
+                        var failure = failures[i - 1];
                         // Populate the error message.
                         var newline = failure.SectionPath.IndexOf("\n");
-                        if( newline != -1 )
+                        if (newline != -1)
                         {
                             // Remove first line of the SectionPath, which is the test case name.
                             failure.SectionPath = failure.SectionPath.Substring(failure.SectionPath.IndexOf("\n") + 1);
@@ -211,5 +210,6 @@ namespace CatchTestAdapter
             // Remove the temporary input file.
             System.IO.File.Delete(caseFile);
         }
+
     }
 }

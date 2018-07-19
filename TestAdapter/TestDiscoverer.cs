@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Linq;
 using TestAdapter.Settings;
+using System.Xml.XPath;
+using System.IO;
 
 namespace CatchTestAdapter
 {
@@ -20,17 +22,16 @@ namespace CatchTestAdapter
 
             // Load settings from the discovery context.
             CatchAdapterSettings settings = CatchSettingsProvider.LoadSettings( discoveryContext.RunSettings );
-
-            logger.SendMessage( TestMessageLevel.Informational,
-                "Inclusion patterns: " + String.Join( ",", settings.TestExeInclude ) );
+            logger.SendMessage( TestMessageLevel.Informational, "Inclusion patterns: " + String.Join( ",", settings.TestExeInclude ) );
 
             try
             {
+                var slnRoot = GetSolutionDirectory(discoveryContext.RunSettings);
                 foreach (var src in sources.Where(src => settings.IncludeTestExe(src)))
                 {
                     logger.SendMessage(TestMessageLevel.Informational, $"Processing catch test source: '{src}'...");
 
-                    var testCases = CreateTestCases(src);
+                    var testCases = CreateTestCases(src, slnRoot);
                     foreach (var t in testCases)
                     {
                         discoverySink.SendTestCase(t);
@@ -45,8 +46,30 @@ namespace CatchTestAdapter
             }
         }
 
+        public static string GetSolutionDirectory(IRunSettings settings)
+        {
+            XPathDocument document = new XPathDocument(new StringReader(settings.SettingsXml));
+            XPathNavigator navigator = document.CreateNavigator();
 
-        public static IList<TestCase> CreateTestCases( string exeName )
+            if (navigator.MoveToFollowing("SolutionDirectory", ""))
+                return navigator.Value;
+            return "";
+        }
+
+        public static string ResolvePath(string path, string root)
+        {
+            if (!System.IO.Path.IsPathRooted(path))
+            {
+                string maybePath = System.IO.Path.Combine(root, path);
+                if (System.IO.File.Exists(maybePath))
+                {
+                    path = maybePath;
+                }
+            }
+            return path;
+        }
+
+        public static IList<TestCase> CreateTestCases( string exeName, string slnRoot )
         {
             var testCases = new List<TestCase>();
 
@@ -54,9 +77,9 @@ namespace CatchTestAdapter
             string workingDirectory = System.IO.Path.GetDirectoryName( exeName );
 
             var output = ProcessRunner.RunProcess(exeName, "--list-tests --verbosity high", workingDirectory);
-
             foreach (var test in ParseListing( exeName, output ) )
             {
+                test.CodeFilePath = ResolvePath(test.CodeFilePath, slnRoot);
                 testCases.Add( test );
             }
 
@@ -102,9 +125,11 @@ namespace CatchTestAdapter
             int lineNumber = Int32.Parse( lineInfoMatch.Groups[ "line" ].Value );
 
             // Construct the test.
-            TestCase test = new TestCase( name, new Uri( TestExecutor.ExecutorUriString ), exeName );
-            test.CodeFilePath = path;
-            test.LineNumber = lineNumber;
+            TestCase test = new TestCase(name, new Uri(TestExecutor.ExecutorUriString), exeName)
+            {
+                CodeFilePath = path,
+                LineNumber = lineNumber
+            };
 
             // Turn tags to traits.
 
