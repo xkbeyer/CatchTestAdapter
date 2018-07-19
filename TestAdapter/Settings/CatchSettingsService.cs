@@ -67,7 +67,7 @@ namespace TestAdapter.Settings
             {
                 // Note that explicit runsettings for catch were not provided.
                 log.Log(MessageLevel.Informational,
-                    $"No '{CatchAdapterSettings.XmlRoot}' node in explicit runsettings (or no explicit runsettins at all). " +
+                    $"No '{CatchAdapterSettings.XmlRoot}' node in explicit runsettings (or no explicit runsettings at all). " +
                     "Searching for runsettings in solution directory and above.");
 
                 // Read settings from files.
@@ -130,7 +130,6 @@ namespace TestAdapter.Settings
         private CatchAdapterSettings MaybeReadSettingsFromXml(IXPathNavigable settingSource)
         {
             XPathNavigator navigator = settingSource.CreateNavigator();
-
             if (navigator.MoveToFollowing(CatchAdapterSettings.XmlRoot, ""))
             {
 
