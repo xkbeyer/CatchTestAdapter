@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using System.Xml;
 using System.Xml.Linq;
 using System.IO;
 using System.Globalization;
@@ -125,8 +126,10 @@ namespace CatchTestAdapter
             return result;
         }
 
-        public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
+        public void RunTests(IEnumerable<TestCase> testsToRun, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
+            var tests = testsToRun.ToList();
+
             SolutionDirectory = runContext.SolutionDirectory;
             var CatchExe = tests.First().Source;
             var timer = Stopwatch.StartNew();
@@ -161,54 +164,111 @@ namespace CatchTestAdapter
             frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
 
             // Output as a single string.
-            string output = output_text.Aggregate("", (acc, add) => acc + add);
-            System.IO.MemoryStream reader = new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes(output));
-            var serializer = new XmlSerializer(typeof(CatchTestAdapter.Tests.Catch));
-            var catchResult = (CatchTestAdapter.Tests.Catch)serializer.Deserialize(reader);
-            foreach (var testCase in catchResult.TestCases)
-            {
-                // Find the matching test case
-                var test = tests.Where((test_case) => test_case.DisplayName == testCase.Name).ElementAt(0);
-                var testResult = new TestResult(test);
-                // Add the test execution time provided by Catch to the result.
-                var testTime = testCase.Result.Duration;
-                testResult.Duration = TimeSpan.FromSeconds(Double.Parse(testTime, CultureInfo.InvariantCulture));
-                if (testCase.Result.Success == "true")
-                {
-                    testResult.Outcome = TestOutcome.Passed;
-                }
-                else
-                {
-                    // Mark failure.
-                    testResult.Outcome = TestOutcome.Failed;
+            var outputstr = string.Join("", output_text);
+            var stream = new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes(outputstr));
 
-                    // Parse the failure to a flat result.
-                    List<FlatResult> failures = GetFlatFailure(testCase);
-                    testResult.ErrorMessage = $"{Environment.NewLine}";
-                    for (int i = 1; i <= failures.Count; ++i)
+            var testCaseSerializer = new XmlSerializer(typeof(CatchTestAdapter.Tests.TestCase));
+
+            try
+            {
+                var reader = XmlReader.Create(stream);
+                int depth = 0;
+                while (reader.Read()) {
+                    if (reader.NodeType == XmlNodeType.EndElement)
                     {
-                        var failure = failures[i - 1];
-                        // Populate the error message.
-                        var newline = failure.SectionPath.IndexOf("\n");
-                        if (newline != -1)
+                        if (reader.Name == "Group" || reader.Name == "Catch")
+                            depth--;
+                        continue;
+                    }
+
+                    // only process Element nodes here
+                    if (reader.NodeType != XmlNodeType.Element)
+                        continue;
+
+                    if ((depth == 0 && reader.Name == "Catch") ||
+                        (depth == 1 && reader.Name == "Group"))
+                    {
+                        depth++;
+                        continue;
+                    }
+
+                    if (depth != 2 || reader.Name != "TestCase")
+                        continue;
+
+                    var xmlResult = (Tests.TestCase)testCaseSerializer.Deserialize(reader.ReadSubtree());
+
+                    // Find the matching test case
+                    var test = tests.Where((test_case) => test_case.DisplayName == xmlResult.Name).First();
+                    var testResult = new TestResult(test);
+
+                    // Add the test execution time provided by Catch to the result.
+                    var testTime = xmlResult.Result.Duration;
+                    testResult.Duration = TimeSpan.FromSeconds(Double.Parse(testTime, CultureInfo.InvariantCulture));
+
+                    if (xmlResult.Result.Success == "true")
+                    {
+                        testResult.Outcome = TestOutcome.Passed;
+                    }
+                    else
+                    {
+                        // Mark failure.
+                        testResult.Outcome = TestOutcome.Failed;
+
+                        // Parse the failure to a flat result.
+                        List<FlatResult> failures = GetFlatFailure(xmlResult);
+                        testResult.ErrorMessage = $"{Environment.NewLine}";
+                        for (int i = 1; i <= failures.Count; ++i)
                         {
-                            // Remove first line of the SectionPath, which is the test case name.
-                            failure.SectionPath = failure.SectionPath.Substring(failure.SectionPath.IndexOf("\n") + 1);
-                            testResult.ErrorMessage += $"#{i} - {failure.SectionPath}{Environment.NewLine}{failure.Expression}{Environment.NewLine}";
+                            var failure = failures[i - 1];
+                            // Populate the error message.
+                            var newline = failure.SectionPath.IndexOf("\n");
+                            if (newline != -1)
+                            {
+                                // Remove first line of the SectionPath, which is the test case name.
+                                failure.SectionPath = failure.SectionPath.Substring(failure.SectionPath.IndexOf("\n") + 1);
+                                testResult.ErrorMessage += $"#{i} - {failure.SectionPath}{Environment.NewLine}{failure.Expression}{Environment.NewLine}";
+                            }
+                            else
+                            {
+                                testResult.ErrorMessage += $"#{i} - {failure.Expression}{Environment.NewLine}";
+                            }
+                            // And the error stack.
+                            testResult.ErrorStackTrace += $"at #{i} - {test.DisplayName}() in {failure.FilePath}:line {failure.LineNumber}{Environment.NewLine}";
                         }
-                        else
-                        {
-                            testResult.ErrorMessage += $"#{i} - {failure.Expression}{Environment.NewLine}";
-                        }
-                        // And the error stack.
-                        testResult.ErrorStackTrace += $"at #{i} - {test.DisplayName}() in {failure.FilePath}:line {failure.LineNumber}{Environment.NewLine}";
+                    }
+
+                    // Finally record the result.
+                    frameworkHandle.RecordResult(testResult);
+
+                    // And remove the test from the list of outstanding tests
+                    tests.Remove(test);
+                }
+            }
+            catch (InvalidOperationException iex)
+            {
+                if (tests.Count != 0)
+                {
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, $"Running test {CatchExe}, exception in adapter: {iex}");
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, "  Test output, all remaining test cases marked as inconclusive: ");
+                    foreach (var s in output_text)
+                    {
+                        frameworkHandle.SendMessage(TestMessageLevel.Error, s);
+                    }
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, "===============================");
+
+                    foreach (var missingTest in tests)
+                    {
+                        var testResult = new TestResult(missingTest);
+                        testResult.Outcome = TestOutcome.None;
+                        frameworkHandle.RecordResult(testResult);
                     }
                 }
-                // Finally record the result.
-                frameworkHandle.RecordResult(testResult);
             }
-            // Remove the temporary input file.
-            System.IO.File.Delete(caseFile);
+            finally
+            {
+                // Remove the temporary input file.
+                System.IO.File.Delete(caseFile);
+            }
         }
 
     }
