@@ -20,7 +20,7 @@ namespace TestAdapterTest.Mocks
 
         public string TestRunDirectory => throw new NotImplementedException();
 
-        public string SolutionDirectory => throw new NotImplementedException();
+        public string SolutionDirectory { get; } = "./";
 
         public IRunSettings RunSettings => this.MockSettings;
 
