@@ -64,7 +64,7 @@ namespace CatchTestAdapter
 
             // Get the output.
             var outputLines = new List<string>( System.IO.File.ReadAllLines( workingDirectory +
-				System.IO.Path.DirectorySeparatorChar + outputFile ) );
+                System.IO.Path.DirectorySeparatorChar + outputFile ) );
             System.IO.File.Delete( outputFile );
 
             return outputLines;
