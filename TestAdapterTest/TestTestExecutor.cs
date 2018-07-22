@@ -8,6 +8,7 @@ using TestAdapterTest.Mocks;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.IO;
+using System.Linq;
 
 namespace TestAdapterTest
 {
@@ -100,6 +101,162 @@ namespace TestAdapterTest
             TestResult forcedFailure = resultsByName[ "Has forced failure" ];
             Assert.AreEqual( TestOutcome.Failed, forcedFailure.Outcome );
             Assert.IsTrue( forcedFailure.ErrorMessage.Contains( "This message should be in the failure report." ) );
+        }
+
+        [TestMethod]
+        public void BrokenXmlWithSingleTest()
+        {
+            var framework = new MockFrameworkHandle();
+            var runcontext = new MockRunContext();
+            var executor = new MockTestExecutor();
+            IList<string> xml_output = new List<string>() { @"<?xml version=""1.0"" encoding=""UTF-8""?>",
+@"<Catch name=""CatchUnitTest.exe"">",
+@"  <Group name=""CatchUnitTest.exe"">",
+@"    <TestCase name=""C++ assert"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""45"">"
+};
+            IList<TestCase> tests = new List<TestCase>();
+            tests.Add(new TestCase("C++ assert", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 45 });
+            executor.MockComposeResults(xml_output, tests, framework);
+            Assert.AreEqual(1, framework.Results.Count);
+            Assert.AreEqual(TestOutcome.None, framework.Results[0].Outcome);
+        }
+
+        [TestMethod]
+        public void BrokenXml()
+        {
+            var framework = new MockFrameworkHandle();
+            var runcontext = new MockRunContext();
+            var executor = new MockTestExecutor();
+            IList<string> xml_output = new List<string>() { @"<?xml version=""1.0"" encoding=""UTF-8""?>",
+@"<Catch name=""CatchUnitTest.exe"">",
+@"  <Group name=""CatchUnitTest.exe"">",
+@"    <TestCase name=""Simple test case"" tags=""[#testrunnertest][tag]"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""15"">",
+@"      <Expression success=""false"" type=""CHECK"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""10"">",
+@"        <Original>",
+@"          3 == 4",
+@"        </Original>",
+@"        <Expanded>",
+@"          3 == 4",
+@"        </Expanded>",
+@"      </Expression>",
+@"      <Expression success=""false"" type=""REQUIRE"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""11"">",
+@"        <Original> ",
+@"          9 == 0   ",
+@"        </Original>",
+@"        <Expanded> ",
+@"          9 == 0   ",
+@"        </Expanded>",
+@"      </Expression>",
+@"      <OverallResult success=""false"" durationInSeconds=""0.003571""/>",
+@"    </TestCase>",
+@"    <TestCase name=""Another test case"" tags=""[#testrunnertest][tag]"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""23"">",
+@"      <Expression success=""false"" type=""CHECK"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""18"">",
+@"        <Original> ",
+@"          a == b   ",
+@"        </Original>",
+@"        <Expanded> ",
+@"          5 == 6   ",
+@"        </Expanded>",
+@"      </Expression>",
+@"      <Section name=""A Section test"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""20"">",
+@"        <OverallResults successes=""1"" failures=""0"" expectedFailures=""0"" durationInSeconds=""2.3e-05""/>",
+@"      </Section>",
+@"      <OverallResult success=""false"" durationInSeconds=""0.002557""/>",
+@"    </TestCase>",
+@"    <TestCase name=""Third test case"" tags=""[#testrunnertest][tag]"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""37"">",
+@"      <Failure filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""24"">",
+@"        Fail check",
+@"      </Failure>",
+@"      <OverallResult success=""false"" durationInSeconds=""0.001122""/>",
+@"    </TestCase>",
+@"    <TestCase name=""C++ assert"" tags=""[#testrunnertest]"" filename=""ReferenceCatchProject\testrunnertest.cpp"" line=""45"">",
+};
+            IList<TestCase> tests = new List<TestCase>();
+            tests.Add(new TestCase("Simple test case", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 15 });
+            tests.Add(new TestCase("Another test case", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 23 });
+            tests.Add(new TestCase("Third test case", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 37 });
+            tests.Add(new TestCase("C++ assert", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 45 });
+            tests.Add(new TestCase("Last test case", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 54 });
+            executor.MockComposeResults(xml_output, tests, framework);
+            Assert.AreEqual(5, framework.Results.Count);
+            for(int i = 0; i < 3; ++i)
+            {
+                Assert.AreNotEqual(TestOutcome.None, framework.Results[i].Outcome);
+            }
+            Assert.AreEqual(TestOutcome.None, framework.Results[3].Outcome);
+            Assert.AreEqual(TestOutcome.None, framework.Results[4].Outcome);
+        }
+
+        [TestMethod]
+        public void XmlReadSuccessOnlyTestCase()
+        {
+            var framework = new MockFrameworkHandle();
+            var runcontext = new MockRunContext();
+            var executor = new MockTestExecutor();
+            IList<string> xml_output = new List<string>() { @"<?xml version=""1.0"" encoding=""UTF-8""?>",
+@"<Catch name=""CatchUnitTest.exe"">",
+@"  <Group name=""CatchUnitTest.exe"">",
+@"    <TestCase name=""First fixture"" tags=""[fixture]"" filename=""ReferenceCatchProject\fixture_test.cpp"" line=""13"">",
+@"      <OverallResult success=""true"" durationInSeconds=""0.00085""/>",
+@"    </TestCase>",
+@"  </Group>",
+@"  <OverallResults successes=""3"" failures=""3"" expectedFailures=""0""/>",
+@"</Catch>"
+};
+            IList<TestCase> tests = new List<TestCase>();
+            tests.Add(new TestCase("First fixture", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\fixture_test.cpp", LineNumber = 13 });
+            executor.MockComposeResults(xml_output, tests, framework);
+            Assert.AreEqual(1, framework.Results.Count);
+            Assert.AreEqual(TestOutcome.Passed, framework.Results[0].Outcome);
+        }
+
+        [TestMethod]
+        public void XmlReadTest()
+        {
+            var framework = new MockFrameworkHandle();
+            var runcontext = new MockRunContext();
+            var executor = new MockTestExecutor();
+            IList<string> xml_output = new List<string>() { @"<?xml version=""1.0"" encoding=""UTF-8""?>",
+@"<Catch name=""CatchUnitTest.exe"">",
+@"  <Group name=""CatchUnitTest.exe"">",
+@"    <TestCase name=""Second fixture"" tags=""[fixture]"" filename=""ReferenceCatchProject\fixture_test.cpp"" line=""21"">",
+@"      <Expression success=""false"" type=""REQUIRE"" filename=""ReferenceCatchProject\fixture_test.cpp"" line=""25"">",
+@"        <Original>",
+@"          expected == actual",
+@"        </Original>",
+@"        <Expanded>",
+@"          true == false",
+@"        </Expanded>",
+@"      </Expression>",
+@"      <OverallResult success=""false"" durationInSeconds=""0.001865""/>",
+@"    </TestCase>",
+@"    <TestCase name=""Fail message test"" tags=""[fixture]"" filename=""ReferenceCatchProject\fixture_test.cpp"" line=""31"">",
+@"      <Failure filename=""ReferenceCatchProject\fixture_test.cpp"" line=""33"">",
+@"        Not implemented!",
+@"      </Failure>",
+@"      <OverallResult success=""false"" durationInSeconds=""0.001188""/>",
+@"    </TestCase>",
+@"    <TestCase name=""Fail message test in between"" tags=""[fixture]"" filename=""ReferenceCatchProject\fixture_test.cpp"" line=""36"">",
+@"      <Failure filename=""ReferenceCatchProject\fixture_test.cpp"" line=""40"">",
+@"        Not implemented!",
+@"      </Failure>",
+@"      <OverallResult success=""false"" durationInSeconds=""0.001295""/>",
+@"    </TestCase>",
+@"    <OverallResults successes=""3"" failures=""3"" expectedFailures=""0""/>",
+@"  </Group>",
+@"  <OverallResults successes=""3"" failures=""3"" expectedFailures=""0""/>",
+@"</Catch>"
+};
+            IList<TestCase> tests = new List<TestCase>();
+            tests.Add(new TestCase("Second fixture", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\fixture_test.cpp", LineNumber = 21 });
+            tests.Add(new TestCase("Fail message test", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\fixture_test.cpp", LineNumber = 31 });
+            tests.Add(new TestCase("Fail message test in between", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\fixture_test.cpp", LineNumber = 36 });
+            executor.MockComposeResults(xml_output, tests, framework);
+            Assert.AreEqual(3, framework.Results.Count);
+            for (int i = 0; i < framework.Results.Count; ++i)
+            {
+                Assert.AreEqual(TestOutcome.Failed, framework.Results[i].Outcome);
+            }
         }
     }
 }

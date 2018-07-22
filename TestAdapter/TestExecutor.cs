@@ -164,16 +164,23 @@ namespace CatchTestAdapter
             frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
 
             // Output as a single string.
-            var outputstr = string.Join("", output_text);
-            var stream = new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes(outputstr));
+            ComposeResults(output_text, tests, frameworkHandle);
 
+            // Remove the temporary input file.
+            System.IO.File.Delete(caseFile);
+        }
+
+        protected virtual void ComposeResults(IList<string> output_text, IList<TestCase> tests, IFrameworkHandle frameworkHandle)
+        {
+            var xmlresult = string.Join("", output_text);
+            var stream = new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes(xmlresult));
             var testCaseSerializer = new XmlSerializer(typeof(CatchTestAdapter.Tests.TestCase));
-
             try
             {
                 var reader = XmlReader.Create(stream);
                 int depth = 0;
-                while (reader.Read()) {
+                while (reader.Read())
+                {
                     if (reader.NodeType == XmlNodeType.EndElement)
                     {
                         if (reader.Name == "Group" || reader.Name == "Catch")
@@ -244,11 +251,11 @@ namespace CatchTestAdapter
                     tests.Remove(test);
                 }
             }
-            catch (InvalidOperationException iex)
+            catch (InvalidOperationException ex)
             {
                 if (tests.Count != 0)
                 {
-                    frameworkHandle.SendMessage(TestMessageLevel.Error, $"Running test {CatchExe}, exception in adapter: {iex}");
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, $"Running test {tests.First().Source}, exception in adapter: {ex}");
                     frameworkHandle.SendMessage(TestMessageLevel.Error, "  Test output, all remaining test cases marked as inconclusive: ");
                     foreach (var s in output_text)
                     {
@@ -258,18 +265,14 @@ namespace CatchTestAdapter
 
                     foreach (var missingTest in tests)
                     {
-                        var testResult = new TestResult(missingTest);
-                        testResult.Outcome = TestOutcome.None;
+                        var testResult = new TestResult(missingTest)
+                        {
+                            Outcome = TestOutcome.None
+                        };
                         frameworkHandle.RecordResult(testResult);
                     }
                 }
             }
-            finally
-            {
-                // Remove the temporary input file.
-                System.IO.File.Delete(caseFile);
-            }
         }
-
     }
 }
