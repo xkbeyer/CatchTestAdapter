@@ -170,6 +170,12 @@ namespace CatchTestAdapter
             System.IO.File.Delete(caseFile);
         }
 
+        /// <summary>
+        /// Reports all results from the XML output to the framework.
+        /// </summary>
+        /// <param name="output_text">The text lines of the output</param>
+        /// <param name="tests">List of tests from the discoverer</param>
+        /// <param name="frameworkHandle"></param>
         protected virtual void ComposeResults(IList<string> output_text, IList<TestCase> tests, IFrameworkHandle frameworkHandle)
         {
             var xmlresult = string.Join("", output_text);
@@ -178,30 +184,10 @@ namespace CatchTestAdapter
             try
             {
                 var reader = XmlReader.Create(stream);
-                int depth = 0;
                 while (reader.Read())
                 {
-                    if (reader.NodeType == XmlNodeType.EndElement)
-                    {
-                        if (reader.Name == "Group" || reader.Name == "Catch")
-                            depth--;
+                    if (reader.Depth != 2 || reader.Name != "TestCase")
                         continue;
-                    }
-
-                    // only process Element nodes here
-                    if (reader.NodeType != XmlNodeType.Element)
-                        continue;
-
-                    if ((depth == 0 && reader.Name == "Catch") ||
-                        (depth == 1 && reader.Name == "Group"))
-                    {
-                        depth++;
-                        continue;
-                    }
-
-                    if (depth != 2 || reader.Name != "TestCase")
-                        continue;
-
                     var xmlResult = (Tests.TestCase)testCaseSerializer.Deserialize(reader.ReadSubtree());
 
                     // Find the matching test case
