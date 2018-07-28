@@ -8,7 +8,6 @@ using TestAdapterTest.Mocks;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.IO;
-using System.Linq;
 
 namespace TestAdapterTest
 {

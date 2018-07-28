@@ -5,7 +5,6 @@ using Catch.TestAdapter;
 using System.Collections.Generic;
 
 using TestAdapterTest.Mocks;
-using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using TestAdapter.Settings;

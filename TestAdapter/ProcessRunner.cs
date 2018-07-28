@@ -1,8 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 
 namespace Catch.TestAdapter

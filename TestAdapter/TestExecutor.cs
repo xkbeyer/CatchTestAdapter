@@ -5,7 +5,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System.Xml;
-using System.Xml.Linq;
 using System.IO;
 using System.Globalization;
 using System.Diagnostics;
