@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace CatchTestAdapter.Tests
+namespace Catch.TestAdapter.Tests
 {
     [XmlRoot("Catch")]
     public class Catch

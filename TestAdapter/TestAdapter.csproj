@@ -7,8 +7,8 @@
     <ProjectGuid>{25DDAD58-AC83-402D-9D51-06CD0C8177F5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TestAdapter</RootNamespace>
-    <AssemblyName>TestAdapter</AssemblyName>
+    <RootNamespace>Catch.TestAdapter</RootNamespace>
+    <AssemblyName>Catch.TestAdapter</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

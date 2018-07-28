@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace TestAdapterTest.Mocks
 {
-    public class MockTestExecutor : CatchTestAdapter.TestExecutor
+    public class MockTestExecutor : Catch.TestAdapter.TestExecutor
     {
         public void MockComposeResults(IList<string> output_text, IList<TestCase> tests, IFrameworkHandle frameworkHandle)
         {

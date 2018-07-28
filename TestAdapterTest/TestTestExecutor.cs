@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 
-using CatchTestAdapter;
+using Catch.TestAdapter;
 
 using TestAdapterTest.Mocks;
 using System.Collections.Generic;

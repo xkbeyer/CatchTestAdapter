@@ -33,8 +33,8 @@
     <ProjectGuid>{27F6F128-29B3-4F95-9C17-F00750484B21}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CatchTestAdapter</RootNamespace>
-    <AssemblyName>CatchTestAdapter</AssemblyName>
+    <RootNamespace>CatchTestAdapter.VsPackage</RootNamespace>
+    <AssemblyName>CatchTestAdapter.VsPackage</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
@@ -62,7 +62,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VSPackage1.cs" />
+    <Compile Include="VSPackage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />

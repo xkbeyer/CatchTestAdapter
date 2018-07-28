@@ -13,7 +13,7 @@ using System.Diagnostics;
 using TestAdapter.Settings;
 using System.Xml.Serialization;
 
-namespace CatchTestAdapter
+namespace Catch.TestAdapter
 {
 
     [ExtensionUri(ExecutorUriString)]
@@ -208,7 +208,7 @@ namespace CatchTestAdapter
         {
             var xmlresult = string.Join("", output_text);
             var stream = new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes(xmlresult));
-            var testCaseSerializer = new XmlSerializer(typeof(CatchTestAdapter.Tests.TestCase));
+            var testCaseSerializer = new XmlSerializer(typeof(Catch.TestAdapter.Tests.TestCase));
             try
             {
                 var reader = XmlReader.Create(stream);

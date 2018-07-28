@@ -1,16 +1,11 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="VSPackage1.cs" company="Company">
-//     Copyright (c) Company.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
+﻿
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 
 
-namespace CatchTestAdapter
+namespace CatchTestAdapter.VsPackage
 {
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
@@ -31,19 +26,19 @@ namespace CatchTestAdapter
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
-    [Guid(VSPackage1.PackageGuidString)]
+    [Guid(VSPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public sealed class VSPackage1 : Package
+    public sealed class VSPackage : Package
     {
         /// <summary>
-        /// VSPackage1 GUID string.
+        /// VSPackage GUID string.
         /// </summary>
         public const string PackageGuidString = "0e0e5854-4f59-4e2a-9e3e-35eb2bb6cf3d";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VSPackage1"/> class.
+        /// Initializes a new instance of the <see cref="VSPackage"/> class.
         /// </summary>
-        public VSPackage1()
+        public VSPackage()
         {
             // Inside this method you can place any initialization code that does not require
             // any Visual Studio service because at this point the package object is created but

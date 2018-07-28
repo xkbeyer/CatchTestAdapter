@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("CatchTestAdapter")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("CatchTestAdapter.VsPackage")]
+[assembly: AssemblyDescription("Visual Studio Extension for the Catch2 Unit Test Framework")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Klaus Beyer")]
 [assembly: AssemblyProduct("CatchTestAdapter")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyCopyright("Copyright (c) 2016-2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

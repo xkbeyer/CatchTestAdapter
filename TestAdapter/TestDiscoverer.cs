@@ -10,7 +10,7 @@ using TestAdapter.Settings;
 using System.Xml.XPath;
 using System.IO;
 
-namespace CatchTestAdapter
+namespace Catch.TestAdapter
 {
     [DefaultExecutorUri(TestExecutor.ExecutorUriString)]
     [FileExtension(".exe")]
