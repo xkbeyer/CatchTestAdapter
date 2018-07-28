@@ -34,10 +34,10 @@ namespace CatchTestAdapter.Tests
             get { return _expressions; }
             set { if (value != null) _expressions = value; }
         }
-        [XmlElement("Warning")]
-        public string Warning { get; set; } = "";
-        [XmlElement("Info")]
-        public string Info { get; set; } = "";
+        [XmlElement("Warning", typeof(string))]
+        public string[] Warning { get; set; } = new string[] { };
+        [XmlElement("Info",typeof(string))]
+        public string[] Info { get; set; } = new string[] { };
         [XmlElement("Failure", typeof(Failure))]
         public Failure Failure { get; set; }
         [XmlElement("Section", typeof(TestCase))]

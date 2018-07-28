@@ -104,6 +104,37 @@ namespace TestAdapterTest
         }
 
         [TestMethod]
+        public void WarningAndInfoMessage()
+        {
+            // Set up a fake testing context.
+            var framework = new MockFrameworkHandle();
+
+            // Execute all tests.
+            TestExecutor executor = new TestExecutor();
+            executor.RunTests(Common.ReferenceExeList, new MockRunContext(), framework);
+
+            // Map the tests by name.
+            Dictionary<string, TestResult> resultsByName = new Dictionary<string, TestResult>();
+            foreach (var result in framework.Results)
+            {
+                resultsByName[result.TestCase.FullyQualifiedName] = result;
+            }
+
+            TestResult testResult = resultsByName["Warn"];
+            Assert.AreEqual(TestOutcome.Failed, testResult.Outcome);
+            Assert.IsTrue(testResult.ErrorMessage.Contains("#1 - CHECK(false) with expansion: (false)"));
+            Assert.AreEqual(1, testResult.Messages.Count);
+            Assert.IsTrue(testResult.Messages[0].Text.Contains("WARN: This is a warning message"));
+
+            testResult = resultsByName["Info"];
+            Assert.AreEqual(TestOutcome.Failed, testResult.Outcome);
+            Assert.IsTrue(testResult.ErrorMessage.Contains("#1 - CHECK(false) with expansion: (false)"));
+            Assert.AreEqual(1, testResult.Messages.Count);
+            Assert.IsTrue(testResult.Messages[0].Text.Contains("INFO: This is a info message"));
+
+        }
+
+        [TestMethod]
         public void BrokenXmlWithSingleTest()
         {
             var framework = new MockFrameworkHandle();

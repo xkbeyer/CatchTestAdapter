@@ -22,6 +22,6 @@ namespace TestAdapterTest
         public static List<string> ReferenceExeList { get; } = new List<String>() { ReferenceExe };
 
         // The number of tests in the reference project.
-        public const int ReferenceTestCount = 4;
+        public const int ReferenceTestCount = 6;
     }
 }

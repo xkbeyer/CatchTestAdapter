@@ -93,6 +93,34 @@ namespace CatchTestAdapter
                 }
             }
 
+            if( element.Warning != null )
+            {
+                foreach (var s in element.Warning)
+                {
+                    var res = new FlatResult()
+                    {
+                        SectionPath = name,
+                        Expression = $"WARN: {s.Trim()}{ Environment.NewLine }",
+                        FilePath = TestDiscoverer.ResolvePath(element.Filename, SolutionDirectory)
+                    };
+                    result.Add(res);
+                }
+            }
+
+            if (element.Info != null)
+            {
+                foreach(var s in element.Info)
+                {
+                    var res = new FlatResult()
+                    {
+                        SectionPath = name,
+                        Expression = $"INFO: {s.Trim()}{ Environment.NewLine }",
+                        FilePath = TestDiscoverer.ResolvePath(element.Filename, SolutionDirectory)
+                    };
+                    result.Add(res);
+                }
+            }
+
             // Try to find the failure from a subsection of this element.
             foreach (var section in element.Sections)
             {
@@ -213,6 +241,11 @@ namespace CatchTestAdapter
                         for (int i = 1; i <= failures.Count; ++i)
                         {
                             var failure = failures[i - 1];
+                            if (failure.Expression.Contains("WARN:") || failure.Expression.Contains("INFO:"))
+                            {
+                                testResult.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, failure.Expression));
+                                continue;
+                            }
                             // Populate the error message.
                             var newline = failure.SectionPath.IndexOf("\n");
                             if (newline != -1)
