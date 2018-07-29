@@ -37,7 +37,6 @@ namespace TestAdapterTest.Mocks
 
         public void RecordEnd( TestCase testCase, TestOutcome outcome )
         {
-            throw new NotImplementedException();
         }
 
         public void RecordResult( TestResult testResult )
@@ -47,7 +46,6 @@ namespace TestAdapterTest.Mocks
 
         public void RecordStart( TestCase testCase )
         {
-            throw new NotImplementedException();
         }
 
         public void SendMessage( TestMessageLevel testMessageLevel, string message )
