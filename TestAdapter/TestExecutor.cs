@@ -167,7 +167,7 @@ namespace Catch.TestAdapter
             foreach (var section in element.Sections)
             {
                 // Try to find a failure in this section.
-                TryGetFailure(section, testResult, name + "\n");
+                TryGetFailure(section, testResult, name + " ");
             }
         }
 
