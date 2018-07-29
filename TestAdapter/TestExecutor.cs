@@ -30,7 +30,6 @@ namespace Catch.TestAdapter
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
-            this.frameworkHandle = frameworkHandle;
             // Load settings from the context.
             var settings = CatchSettingsProvider.LoadSettings(runContext.RunSettings);
             frameworkHandle.SendMessage(TestMessageLevel.Informational, "CatchAdapter::RunTests... ");
@@ -55,7 +54,6 @@ namespace Catch.TestAdapter
 
         public void RunTests(IEnumerable<TestCase> testsToRun, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
-            this.frameworkHandle = frameworkHandle;
             var tests = testsToRun.ToList();
 
             SolutionDirectory = runContext.SolutionDirectory;
