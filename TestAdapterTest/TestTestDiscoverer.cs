@@ -31,7 +31,7 @@ namespace TestAdapterTest
                 testSink );
 
             // There is a known number of test cases in the reference project.
-            Assert.AreEqual( testSink.Tests.Count, Common.ReferenceTestCount );
+            Assert.AreEqual(Common.ReferenceTestCount, testSink.Tests.Count);
         }
 
         // Tests that the test case lines are correct.
@@ -126,7 +126,7 @@ namespace TestAdapterTest
                 testSink );
 
             // There is a known number of test cases in the reference project.
-            Assert.AreEqual( testSink.Tests.Count, Common.ReferenceTestCount );
+            Assert.AreEqual(Common.ReferenceTestCount, testSink.Tests.Count);
 
             // Clear the sink.
             testSink = new MockTestCaseDiscoverySink();

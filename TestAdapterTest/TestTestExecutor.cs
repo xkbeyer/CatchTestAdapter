@@ -26,7 +26,7 @@ namespace TestAdapterTest
             executor.RunTests( Common.ReferenceExeList, new MockRunContext(), framework );
 
             // Make sure we got results for all.
-            Assert.AreEqual( Common.ReferenceTestCount, framework.Results.Count );
+            Assert.AreEqual( Common.ReferenceTestResultCount, framework.Results.Count );
         }
 
         [TestMethod]
@@ -50,7 +50,7 @@ namespace TestAdapterTest
             Directory.Delete( spaceDir, true );
 
             // Make sure we got results for all.
-            Assert.AreEqual( Common.ReferenceTestCount, framework.Results.Count );
+            Assert.AreEqual( Common.ReferenceTestResultCount, framework.Results.Count );
         }
 
         [TestMethod]
@@ -208,13 +208,13 @@ namespace TestAdapterTest
             tests.Add(new TestCase("C++ assert", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 45 });
             tests.Add(new TestCase("Last test case", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 54 });
             executor.MockComposeResults(xml_output, tests, framework);
-            Assert.AreEqual(5, framework.Results.Count);
+            Assert.AreEqual(6, framework.Results.Count);
             for(int i = 0; i < 3; ++i)
             {
                 Assert.AreNotEqual(TestOutcome.None, framework.Results[i].Outcome);
             }
-            Assert.AreEqual(TestOutcome.None, framework.Results[3].Outcome);
             Assert.AreEqual(TestOutcome.None, framework.Results[4].Outcome);
+            Assert.AreEqual(TestOutcome.None, framework.Results[5].Outcome);
         }
 
         [TestMethod]
