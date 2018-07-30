@@ -159,8 +159,15 @@ namespace Catch.TestAdapter
                 subResult.ErrorMessage += $"#{i} - FAIL({element.Failure.text.Trim()}){Environment.NewLine}";
                 subResult.ErrorStackTrace += $"at #{i} - {name}() in {FilePath}:line {LineNumber}{Environment.NewLine}";
             }
-
-            frameworkHandle.RecordEnd(subResult.TestCase, testResult.Outcome);
+            if( i == 0 )
+            {
+                // No further failed cases found. That can especially happen in SECTIONS.
+                subResult.Outcome = TestOutcome.Passed;
+            } else
+            {
+                subResult.Outcome = TestOutcome.Failed;
+            }
+            frameworkHandle.RecordEnd(subResult.TestCase, subResult.Outcome);
             frameworkHandle.RecordResult(subResult);
 
             // Try to find the failure from a subsection of this element.
