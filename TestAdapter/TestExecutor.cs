@@ -128,9 +128,20 @@ namespace Catch.TestAdapter
         {
             // Get current level's name.
             name += element.Name;
+            var testCase = testResult.TestCase;
+            if ( name != testResult.TestCase.DisplayName)
+            {
+                testCase = new TestCase(testResult.TestCase.FullyQualifiedName, testResult.TestCase.ExecutorUri, testResult.TestCase.Source);
+                testCase.CodeFilePath = testResult.TestCase.CodeFilePath;
+                testCase.DisplayName = name;
+                testCase.LineNumber = testResult.TestCase.LineNumber;
+                testCase.Source = testResult.TestCase.Source;
+                testCase.Traits.Concat( testResult.TestCase.Traits );
+                testCase.Id = Guid.NewGuid();
+            }
             // Try to find the failure from this element.
-            frameworkHandle.RecordStart(testResult.TestCase);
-            var subResult = new TestResult(testResult.TestCase);
+            frameworkHandle.RecordStart(testCase);
+            var subResult = new TestResult(testCase);
             subResult.Outcome = testResult.Outcome;
             subResult.DisplayName = name;
             subResult.ErrorMessage = $"{element.Name}{Environment.NewLine}";
