@@ -157,7 +157,7 @@ namespace Catch.TestAdapter
                 var LineNumber = Int32.Parse(element.Failure.Line);
                 var FilePath = TestDiscoverer.ResolvePath(element.Failure.Filename, SolutionDirectory);
                 subResult.ErrorMessage += $"#{i} - FAIL({element.Failure.text.Trim()}){Environment.NewLine}";
-                subResult.ErrorStackTrace += $"at #{i} - {testResult.DisplayName}() in {FilePath}:line {LineNumber}{Environment.NewLine}";
+                subResult.ErrorStackTrace += $"at #{i} - {name}() in {FilePath}:line {LineNumber}{Environment.NewLine}";
             }
 
             frameworkHandle.RecordEnd(subResult.TestCase, testResult.Outcome);
