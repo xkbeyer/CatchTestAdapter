@@ -11,6 +11,7 @@ using System.Diagnostics;
 
 using TestAdapter.Settings;
 using System.Xml.Serialization;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 namespace Catch.TestAdapter
 {
@@ -18,10 +19,12 @@ namespace Catch.TestAdapter
     [ExtensionUri(ExecutorUriString)]
     public class TestExecutor : ITestExecutor
     {
+        public static readonly TestProperty Section = TestProperty.Register("TestCase.Section", "Section", typeof(string), typeof(TestCase));
         public const string ExecutorUriString = "executor://CatchTestRunner/v1";
         public static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
         private string SolutionDirectory { get; set; } = "";
         private IFrameworkHandle frameworkHandle = null;
+        private IList<TestResult> results = new List<TestResult>();
 
         public void Cancel()
         {
@@ -42,6 +45,7 @@ namespace Catch.TestAdapter
                 {
                     frameworkHandle.SendMessage(TestMessageLevel.Informational, "RunTest with source " + exeName);
                     var tests = TestDiscoverer.CreateTestCases(exeName, runContext.SolutionDirectory);
+
                     RunTests(tests, runContext, frameworkHandle);
                 }
                 catch (Exception ex)
@@ -55,13 +59,38 @@ namespace Catch.TestAdapter
         public void RunTests(IEnumerable<TestCase> testsToRun, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
             var tests = testsToRun.ToList();
-
+#if DEBUG
+            foreach (var t in tests) {
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"DisplayName={t.DisplayName} Full={t.FullyQualifiedName} Prop={t.GetPropertyValue(Section)} ID={t.Id}");
+            }
+#endif
             SolutionDirectory = runContext.SolutionDirectory;
             var CatchExe = tests.First().Source;
             var timer = Stopwatch.StartNew();
 
             // Get a list of all test case names
-            var listOfTestCases = tests.Aggregate("", (acc, test) => acc + test.DisplayName + "\n");
+            var listOfTestCases = tests.Aggregate("", (acc, test) => acc + test.DisplayName + Environment.NewLine);
+            // Find all tests which are section results.
+            var testsWithSections = tests.Where((test) => test.GetPropertyValue(Section) != null );
+            string listOfSections = "";
+            if (testsWithSections.Count() > 0 )
+            {
+                listOfTestCases = "";
+                foreach(var test in testsWithSections)
+                {
+                    var section = test.GetPropertyValue(Section);
+                    var sectionNames = section.ToString().Split('/');
+                    listOfTestCases += sectionNames.First() + Environment.NewLine;
+                    foreach (var n in sectionNames.Skip(1))
+                    {
+                        listOfSections += $" -c \"{n}\"";
+                    }
+                }
+            }
+#if DEBUG
+            frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Tests are: {listOfTestCases}");
+            frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Sections are: {listOfSections}");
+#endif
 
             // Use the directory of the executable as the working directory.
             string workingDirectory = System.IO.Path.GetDirectoryName(CatchExe);
@@ -76,7 +105,7 @@ namespace Catch.TestAdapter
             // Execute the tests
             IList<string> output_text;
 
-            string arguments = "-r xml --durations yes --input-file=" + caseFile;
+            string arguments = "-r xml --durations yes --input-file=" + caseFile + listOfSections;
             if (runContext.IsBeingDebugged)
             {
                 output_text = ProcessRunner.RunDebugProcess(frameworkHandle, CatchExe, arguments, workingDirectory);
@@ -85,7 +114,6 @@ namespace Catch.TestAdapter
             {
                 output_text = ProcessRunner.RunProcess(CatchExe, arguments, workingDirectory);
             }
-
             timer.Stop();
             frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
 
@@ -118,34 +146,14 @@ namespace Catch.TestAdapter
             return i;
         }
         
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <param name="element"></param>
-        /// <param name="testResult"></param>
-        /// <param name="name"></param>
-        void TryGetFailure(Tests.TestCase element, TestResult testResult, string name)
+        private void CreateResult(Tests.TestCase element, TestResult testResult, TestCase testCase, string name)
         {
-            // Get current level's name.
-            name += element.Name;
-            var testCase = testResult.TestCase;
-            if ( name != testResult.TestCase.DisplayName)
-            {
-                testCase = new TestCase(testResult.TestCase.FullyQualifiedName, testResult.TestCase.ExecutorUri, testResult.TestCase.Source);
-                testCase.CodeFilePath = testResult.TestCase.CodeFilePath;
-                testCase.DisplayName = name;
-                testCase.LineNumber = testResult.TestCase.LineNumber;
-                testCase.Source = testResult.TestCase.Source;
-                testCase.Traits.Concat( testResult.TestCase.Traits );
-                testCase.Id = Guid.NewGuid();
-            }
-            // Try to find the failure from this element.
-            frameworkHandle.RecordStart(testCase);
             var subResult = new TestResult(testCase);
             subResult.Outcome = testResult.Outcome;
-            subResult.DisplayName = name;
+            subResult.DisplayName = testCase.DisplayName;
             subResult.ErrorMessage = $"{element.Name}{Environment.NewLine}";
             subResult.ErrorStackTrace = "";
+
 
             int i = ConstructResult(element.Expressions, subResult);
 
@@ -170,22 +178,54 @@ namespace Catch.TestAdapter
                 subResult.ErrorMessage += $"#{i} - FAIL({element.Failure.text.Trim()}){Environment.NewLine}";
                 subResult.ErrorStackTrace += $"at #{i} - {name}() in {FilePath}:line {LineNumber}{Environment.NewLine}";
             }
-            if( i == 0 )
+            if (i == 0)
             {
                 // No further failed cases found. That can especially happen in SECTIONS.
                 subResult.Outcome = TestOutcome.Passed;
-            } else
+            }
+            else
             {
                 subResult.Outcome = TestOutcome.Failed;
             }
-            frameworkHandle.RecordEnd(subResult.TestCase, subResult.Outcome);
-            frameworkHandle.RecordResult(subResult);
+            results.Add(subResult);
+        }
 
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="testResult"></param>
+        /// <param name="name"></param>
+        void TryGetFailure(Tests.TestCase element, TestResult testResult, string name)
+        {
+            name += element.Name;
+            if( element.Result != null )
+                testResult.Duration = TimeSpan.FromSeconds(Double.Parse(element.Result.Duration, CultureInfo.InvariantCulture)); 
+            var testCase = testResult.TestCase;
+            var testCaseSection = testCase.GetPropertyValue(Section)?? "";
+            if ( name != testResult.TestCase.DisplayName && testCaseSection.ToString() != name)
+            {
+                // This is a testcase which hasn't run before. It is really a new one, so create it.
+                testCase = new TestCase(testCase.FullyQualifiedName, testResult.TestCase.ExecutorUri, testResult.TestCase.Source);
+                testCase.CodeFilePath = testResult.TestCase.CodeFilePath;
+                testCase.DisplayName = name.Replace('/', ' ');
+                testCase.LineNumber = testResult.TestCase.LineNumber;
+                testCase.Source = testResult.TestCase.Source;
+                testCase.Traits.Concat( testResult.TestCase.Traits );
+                testCase.Id = EqtHash.GuidFromString(testCase.FullyQualifiedName + testResult.TestCase.ExecutorUri + testResult.TestCase.Source + name);
+                testCase.SetPropertyValue(Section, name);
+#if DEBUG
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Found new TestCase {name} ID={testCase.Id}");
+#endif
+            }
+
+            // Try to find the failure from this element.
+            CreateResult(element, testResult, testCase, name);
             // Try to find the failure from a subsection of this element.
             foreach (var section in element.Sections)
             {
                 // Try to find a failure in this section.
-                TryGetFailure(section, testResult, name + " ");
+                TryGetFailure(section, testResult, name + "/");
             }
         }
 
@@ -208,28 +248,30 @@ namespace Catch.TestAdapter
                 {
                     if (reader.Depth != 2 || reader.Name != "TestCase")
                         continue;
+
                     var xmlResult = (Tests.TestCase)testCaseSerializer.Deserialize(reader.ReadSubtree());
 
                     // Find the matching test case
-                    var test = tests.Where((test_case) => test_case.DisplayName == xmlResult.Name).First();
+                    var test = tests.Where((test_case) => test_case.FullyQualifiedName == xmlResult.Name).First();
                     var testResult = new TestResult(test);
-
-                    // Add the test execution time provided by Catch to the result.
-                    var testTime = xmlResult.Result.Duration;
-                    testResult.Duration = TimeSpan.FromSeconds(Double.Parse(testTime, CultureInfo.InvariantCulture));
-
-                    if (xmlResult.Result.Success == "true")
+                    results.Clear();
+                    TryGetFailure(xmlResult, testResult, "");
+                    var specificTest = results.Where((test_result) => test_result.TestCase.Id == test.Id);
+                    if( specificTest.Count() == 1 && test.DisplayName != test.FullyQualifiedName)
                     {
-                        testResult.Outcome = TestOutcome.Passed;
-                        frameworkHandle.RecordResult(testResult);
+                        var r = specificTest.First();
+                        frameworkHandle.RecordStart(r.TestCase);
+                        frameworkHandle.RecordResult(r);
+                        frameworkHandle.RecordEnd(r.TestCase, r.Outcome);
                     }
                     else
                     {
-                        // Mark failure.
-                        testResult.Outcome = TestOutcome.Failed;
-
-                        // Parse the failure to a flat result.
-                        TryGetFailure(xmlResult, testResult, "");
+                        foreach (var r in results)
+                        {
+                            frameworkHandle.RecordStart(r.TestCase);
+                            frameworkHandle.RecordResult(r);
+                            frameworkHandle.RecordEnd(r.TestCase, r.Outcome);
+                        }
                     }
 
                     // And remove the test from the list of outstanding tests

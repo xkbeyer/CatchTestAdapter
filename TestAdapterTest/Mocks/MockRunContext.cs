@@ -16,7 +16,7 @@ namespace TestAdapterTest.Mocks
 
         public bool IsDataCollectionEnabled => false;
 
-        public bool IsBeingDebugged => System.Diagnostics.Debugger.IsAttached;
+        public bool IsBeingDebugged => false; //System.Diagnostics.Debugger.IsAttached;
 
         public string TestRunDirectory => throw new NotImplementedException();
 

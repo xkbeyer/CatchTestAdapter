@@ -25,6 +25,6 @@ namespace TestAdapterTest
         public const int ReferenceTestCount = 6;
 
         // The number of tests results in the reference project.
-        public const int ReferenceTestResultCount = 9;
+        public const int ReferenceTestResultCount = 11;
     }
 }

@@ -8,6 +8,7 @@ using TestAdapterTest.Mocks;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.IO;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 namespace TestAdapterTest
 {
@@ -287,6 +288,33 @@ namespace TestAdapterTest
             {
                 Assert.AreEqual(TestOutcome.Failed, framework.Results[i].Outcome);
             }
+        }
+
+        [TestMethod]
+        public void TestSingleTestCaseAndOneSection()
+        {
+            // Set up a fake testing context.
+            var framework = new MockFrameworkHandle();
+
+            // Execute all tests.
+            TestExecutor executor = new TestExecutor();
+            List<TestCase> testCases = new List<TestCase>();
+            var test = new TestCase("Has failure", TestExecutor.ExecutorUri, "ReferenceCatchProject.exe")
+            {
+                CodeFilePath = @"ReferenceCatchProject\Tests.cpp",
+                DisplayName = "Has failure Second fails",
+                LineNumber = 24,
+                Source = Common.ReferenceExePath
+            };
+            test.Id = EqtHash.GuidFromString(test.FullyQualifiedName+test.ExecutorUri+test.Source+"Has failure/Second fails");
+            test.Traits.Add(new Trait("tag", null));
+            test.SetPropertyValue(TestExecutor.Section, "Has failure/Second fails");
+            testCases.Add(test);
+            executor.RunTests(testCases, new MockRunContext(), framework);
+
+            // Make sure we got results for all.
+            Assert.AreEqual(1, framework.Results.Count);
+            Assert.AreEqual(TestOutcome.Failed, framework.Results[0].Outcome);
         }
     }
 }
