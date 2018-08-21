@@ -303,7 +303,7 @@ namespace TestAdapterTest
             {
                 CodeFilePath = @"ReferenceCatchProject\Tests.cpp",
                 DisplayName = "Has failure Second fails",
-                LineNumber = 24,
+                LineNumber = 31,
                 Source = Common.ReferenceExePath
             };
             test.Id = EqtHash.GuidFromString(test.FullyQualifiedName+test.ExecutorUri+test.Source+"Has failure/Second fails");
@@ -316,5 +316,93 @@ namespace TestAdapterTest
             Assert.AreEqual(1, framework.Results.Count);
             Assert.AreEqual(TestOutcome.Failed, framework.Results[0].Outcome);
         }
+
+        [TestMethod]
+        public void TestTestCaseAndSection()
+        {
+            // Set up a fake testing context.
+            var framework = new MockFrameworkHandle();
+
+            // Execute all tests.
+            TestExecutor executor = new TestExecutor();
+            List<TestCase> testCases = new List<TestCase>();
+            {
+                var test = new TestCase("Has failure", TestExecutor.ExecutorUri, "ReferenceCatchProject.exe")
+                {
+                    CodeFilePath = @"ReferenceCatchProject\Tests.cpp",
+                    DisplayName = "Has failure First works",
+                    LineNumber = 26,
+                    Source = Common.ReferenceExePath
+                };
+                test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Has failure/First works");
+                test.Traits.Add(new Trait("tag", null));
+                test.SetPropertyValue(TestExecutor.Section, "Has failure/First works");
+                testCases.Add(test);
+            }
+            {
+                var test = new TestCase("Has failure", TestExecutor.ExecutorUri, "ReferenceCatchProject.exe")
+                {
+                    CodeFilePath = @"ReferenceCatchProject\Tests.cpp",
+                    DisplayName = "Has failure Second fails",
+                    LineNumber = 31,
+                    Source = Common.ReferenceExePath
+                };
+                test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Has failure/Second fails");
+                test.Traits.Add(new Trait("tag", null));
+                test.SetPropertyValue(TestExecutor.Section, "Has failure/Second fails");
+                testCases.Add(test);
+            }
+
+            executor.RunTests(testCases, new MockRunContext(), framework);
+
+            // Make sure we got results for all.
+            Assert.AreEqual(2, framework.Results.Count);
+            Assert.AreEqual(TestOutcome.Passed, framework.Results[0].Outcome);
+            Assert.AreEqual(TestOutcome.Failed, framework.Results[1].Outcome);
+        }
+
+        [TestMethod]
+        public void TestTestCaseAndTestCaseSection()
+        {
+            // Set up a fake testing context.
+            var framework = new MockFrameworkHandle();
+
+            // Execute all tests.
+            TestExecutor executor = new TestExecutor();
+            List<TestCase> testCases = new List<TestCase>();
+            {
+                var test = new TestCase("Has failure", TestExecutor.ExecutorUri, "ReferenceCatchProject.exe")
+                {
+                    CodeFilePath = @"ReferenceCatchProject\Tests.cpp",
+                    DisplayName = "Info",
+                    LineNumber = 51,
+                    Source = Common.ReferenceExePath
+                };
+                test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Info");
+                test.Traits.Add(new Trait("Logging", null));
+                testCases.Add(test);
+            }
+            {
+                var test = new TestCase("Has failure", TestExecutor.ExecutorUri, "ReferenceCatchProject.exe")
+                {
+                    CodeFilePath = @"ReferenceCatchProject\Tests.cpp",
+                    DisplayName = "Has failure Second fails",
+                    LineNumber = 31,
+                    Source = Common.ReferenceExePath
+                };
+                test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Has failure/Second fails");
+                test.Traits.Add(new Trait("tag", null));
+                test.SetPropertyValue(TestExecutor.Section, "Has failure/Second fails");
+                testCases.Add(test);
+            }
+
+            executor.RunTests(testCases, new MockRunContext(), framework);
+
+            // Make sure we got results for all.
+            Assert.AreEqual(2, framework.Results.Count);
+            Assert.AreEqual(TestOutcome.Failed, framework.Results[0].Outcome);
+            Assert.AreEqual(TestOutcome.Failed, framework.Results[1].Outcome);
+        }
+
     }
 }

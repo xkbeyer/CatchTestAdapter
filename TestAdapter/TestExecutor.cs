@@ -67,45 +67,60 @@ namespace Catch.TestAdapter
             SolutionDirectory = runContext.SolutionDirectory;
             var CatchExe = tests.First().Source;
             var timer = Stopwatch.StartNew();
-
-            // Get a list of all test case names
-            var listOfTestCases = tests.Aggregate("", (acc, test) => acc + test.DisplayName + Environment.NewLine);
-            // Find all tests which are section results.
-            var testsWithSections = tests.Where((test) => test.GetPropertyValue(Section) != null );
-            string listOfSections = "";
-            if (testsWithSections.Count() > 0 )
-            {
-                listOfTestCases = "";
-                foreach(var test in testsWithSections)
-                {
-                    var section = test.GetPropertyValue(Section);
-                    var sectionNames = section.ToString().Split('/');
-                    listOfTestCases += sectionNames.First() + Environment.NewLine;
-                    foreach (var n in sectionNames.Skip(1))
-                    {
-                        listOfSections += $" -c \"{n}\"";
-                    }
-                }
-            }
-#if DEBUG
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Tests are: {listOfTestCases}");
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Sections are: {listOfSections}");
-#endif
-
             // Use the directory of the executable as the working directory.
             string workingDirectory = System.IO.Path.GetDirectoryName(CatchExe);
             if (workingDirectory == "")
                 workingDirectory = ".";
 
+            IList<string> output_text;
+
+            // Get a list of all test case names
+            var listOfTestCases = tests.Aggregate("", (acc, test) => acc + test.DisplayName + Environment.NewLine);
+            // Find all tests which are section results.
+            var testsWithSections = tests.Where((test) => test.GetPropertyValue(Section) != null );
+            if (testsWithSections.Count() > 0 )
+            {
+                listOfTestCases = "";
+                foreach (var test in testsWithSections)
+                {
+                    var section = test.GetPropertyValue(Section);
+                    var sectionNames = section.ToString().Split('/');
+                    listOfTestCases += sectionNames.First() + Environment.NewLine;
+                    string listOfSections = "";
+                    foreach (var n in sectionNames.Skip(1))
+                    {
+                        listOfSections += $" -c \"{n}\"";
+                    }
+                    string args = $"-r xml --durations yes \"{sectionNames.First()}\" {listOfSections}" ;
+                    if (runContext.IsBeingDebugged)
+                    {
+                        output_text = ProcessRunner.RunDebugProcess(frameworkHandle, CatchExe, args, workingDirectory);
+                    }
+                    else
+                    {
+                        output_text = ProcessRunner.RunProcess(CatchExe, args, workingDirectory);
+                    }
+#if DEBUG
+                    frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Call: {args}");
+#endif
+                    List<TestCase> copyOftests = new List<TestCase>();
+                    copyOftests.Add(test);
+                    ComposeResults(output_text, copyOftests, frameworkHandle);
+                }
+                timer.Stop();
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
+            }
+            var remainingTests = tests.Except(testsWithSections);
+            tests = remainingTests.ToList();
+            listOfTestCases = remainingTests.Aggregate("", (acc,test)=> acc + test.DisplayName + Environment.NewLine);
             // Write them to the input file for Catch runner
             string caseFile = "test.cases";
             System.IO.File.WriteAllText(workingDirectory + System.IO.Path.DirectorySeparatorChar + caseFile, listOfTestCases);
             string originalDirectory = Directory.GetCurrentDirectory();
 
             // Execute the tests
-            IList<string> output_text;
 
-            string arguments = "-r xml --durations yes --input-file=" + caseFile + listOfSections;
+            string arguments = "-r xml --durations yes --input-file=" + caseFile ;
             if (runContext.IsBeingDebugged)
             {
                 output_text = ProcessRunner.RunDebugProcess(frameworkHandle, CatchExe, arguments, workingDirectory);
