@@ -371,7 +371,7 @@ namespace TestAdapterTest
             TestExecutor executor = new TestExecutor();
             List<TestCase> testCases = new List<TestCase>();
             {
-                var test = new TestCase("Has failure", TestExecutor.ExecutorUri, "ReferenceCatchProject.exe")
+                var test = new TestCase("Info", TestExecutor.ExecutorUri, "ReferenceCatchProject.exe")
                 {
                     CodeFilePath = @"ReferenceCatchProject\Tests.cpp",
                     DisplayName = "Info",
