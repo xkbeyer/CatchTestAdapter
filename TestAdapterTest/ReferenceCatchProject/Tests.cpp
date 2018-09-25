@@ -55,3 +55,23 @@ TEST_CASE("Info", "[Logging]")
    INFO("This info message is not displayed"); // This one is ignored
    CHECK(true);
 }
+
+TEST_CASE("Foo")
+{
+   int x = 42;
+   SECTION("less than")
+   {
+      x *= 4;
+      REQUIRE(x < 100);
+   }
+   SECTION("equals")
+   {
+      ++x;
+      CHECK(x == 42);
+      SECTION("bar")
+      {
+         ++x;
+         REQUIRE(x == 42);
+      }
+   }
+}
