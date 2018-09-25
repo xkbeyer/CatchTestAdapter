@@ -91,16 +91,8 @@ namespace Catch.TestAdapter
             System.IO.File.WriteAllText(workingDirectory + System.IO.Path.DirectorySeparatorChar + caseFile, listOfTestCases);
 
             // Execute the tests
-            IList<string> output_text;
             string arguments = "-r xml --durations yes --input-file=" + caseFile ;
-            if (runContext.IsBeingDebugged)
-            {
-                output_text = ProcessRunner.RunDebugProcess(frameworkHandle, CatchExe, arguments, workingDirectory);
-            }
-            else
-            {
-                output_text = ProcessRunner.RunProcess(CatchExe, arguments, workingDirectory);
-            }
+            var output_text = ProcessRunner.RunProcess(frameworkHandle, CatchExe, arguments, workingDirectory, runContext.IsBeingDebugged);
 
             timer.Stop();
             frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
@@ -137,15 +129,7 @@ namespace Catch.TestAdapter
                     listOfSections += $" -c \"{n}\"";
                 }
                 string args = $"-r xml --durations yes \"{sectionNames.First()}\" {listOfSections}";
-                IList<string> output_text;
-                if (isBeingDebugged)
-                {
-                    output_text = ProcessRunner.RunDebugProcess(frameworkHandle, CatchExe, args, workingDirectory);
-                }
-                else
-                {
-                    output_text = ProcessRunner.RunProcess(CatchExe, args, workingDirectory);
-                }
+                var output_text = ProcessRunner.RunProcess(frameworkHandle, CatchExe, args, workingDirectory, isBeingDebugged);
 #if DEBUG
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Call: {args}");
 #endif

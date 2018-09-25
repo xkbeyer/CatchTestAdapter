@@ -16,7 +16,7 @@ namespace Catch.TestAdapter
         /// <param name="cmd">Path to executable.</param>
         /// <param name="args">Command line arguments.</param>
         /// <returns></returns>
-        public static IList<string> RunProcess(string cmd, string args, string workingDirectory )
+        public static IList<string> RunDiscoverProcess(string cmd, string args, string workingDirectory )
         {
             // Start a new process.
             var processStartInfo = new ProcessStartInfo( cmd, args )
@@ -64,6 +64,54 @@ namespace Catch.TestAdapter
             var outputLines = new List<string>( System.IO.File.ReadAllLines( workingDirectory +
                 System.IO.Path.DirectorySeparatorChar + outputFile ) );
             System.IO.File.Delete( outputFile );
+
+            return outputLines;
+        }
+
+        /// <summary>
+        /// Executes an external process attached to the debugger.
+        /// </summary>
+        /// <param name="frameworkHandle">The testing framework that provides the debugger to attach to.</param>
+        /// <param name="cmd">The executable.</param>
+        /// <param name="args">Command-line parameters.</param>
+        /// <returns></returns>
+        public static IList<string> RunProcess(IFrameworkHandle frameworkHandle, string cmd, string args, string workingDirectory, bool isDebugged)
+        {
+            // We cannot reliably capture the output of a process launched by the framework.
+            // We store the output in a temp file instead.
+            string exeName = System.IO.Path.GetFileName(cmd);
+            string outputFile = exeName + ".catchout.xml";
+            string argsWithOutFile = args + $" --out \"{outputFile}\"";
+            Process process;
+            if (isDebugged)
+            {
+                // Tell the framework to run the process in a debugger.
+                int pid = frameworkHandle.LaunchProcessWithDebuggerAttached(
+                    cmd, workingDirectory,
+                    argsWithOutFile, new Dictionary<string, string>());
+                process = Process.GetProcessById(pid);
+            }
+            else
+            {
+                // Start a new process.
+                var processStartInfo = new ProcessStartInfo(cmd, argsWithOutFile)
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = workingDirectory
+                };
+
+                process = Process.Start(processStartInfo);
+            }
+            // Wait for exit.
+            process.WaitForExit();
+
+            // Get the output.
+            var outputLines = new List<string>(System.IO.File.ReadAllLines(workingDirectory +
+                System.IO.Path.DirectorySeparatorChar + outputFile));
+            System.IO.File.Delete(outputFile);
 
             return outputLines;
         }

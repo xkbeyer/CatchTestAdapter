@@ -26,7 +26,7 @@ namespace TestAdapterTest.Mocks
 
         public int LaunchProcessWithDebuggerAttached( string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables )
         {
-            Catch.TestAdapter.ProcessRunner.RunProcess( filePath, arguments, workingDirectory );
+            Catch.TestAdapter.ProcessRunner.RunProcess(null, filePath, arguments, workingDirectory, false);
             return 0;
         }
 

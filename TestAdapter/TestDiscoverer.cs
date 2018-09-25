@@ -76,7 +76,7 @@ namespace Catch.TestAdapter
             // Use the directory of the executable as the working directory.
             string workingDirectory = System.IO.Path.GetDirectoryName( exeName );
 
-            var output = ProcessRunner.RunProcess(exeName, "--list-tests --verbosity high", workingDirectory);
+            var output = ProcessRunner.RunDiscoverProcess(exeName, "--list-tests --verbosity high", workingDirectory);
             foreach (var test in ParseListing( exeName, output ) )
             {
                 test.CodeFilePath = ResolvePath(test.CodeFilePath, slnRoot);
