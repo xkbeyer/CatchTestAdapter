@@ -398,11 +398,42 @@ namespace TestAdapterTest
 
             executor.RunTests(testCases, new MockRunContext(), framework);
 
-            // Make sure we got results for all.
             Assert.AreEqual(2, framework.Results.Count);
             Assert.AreEqual(TestOutcome.Failed, framework.Results[0].Outcome);
             Assert.AreEqual(TestOutcome.Failed, framework.Results[1].Outcome);
         }
 
+        [TestMethod]
+        public void TestRunASectionContainingSubsections()
+        {
+            // Set up a fake testing context.
+            var framework = new MockFrameworkHandle();
+
+            // Execute all tests.
+            TestExecutor executor = new TestExecutor();
+            executor.RunTests(Common.ReferenceExeList, new MockRunContext(), framework);
+            IList<TestCase> listToRun = new List<TestCase>();
+            foreach (var result in framework.Results)
+            {
+                if (result.DisplayName == "Foo equals")
+                {
+                    listToRun.Add(result.TestCase);
+                    break;
+                }
+            }
+            var prevTestCaseIds = from t in framework.Results where t.TestCase.DisplayName.Contains("Foo equals") || t.TestCase.DisplayName == "Foo" select t.TestCase.Id;
+            framework = new MockFrameworkHandle();
+            executor.RunTests(listToRun, new MockRunContext(), framework);
+            // Check if we get the same TestCase Ids back.
+            int matches = 0;
+            foreach(var r in framework.Results)
+            {
+                if( prevTestCaseIds.Contains(r.TestCase.Id) )
+                {
+                    matches++;
+                }
+            }
+            Assert.AreEqual(prevTestCaseIds.Count(), matches);
+        }
     }
 }

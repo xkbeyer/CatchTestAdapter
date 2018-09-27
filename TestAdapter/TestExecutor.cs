@@ -80,6 +80,9 @@ namespace Catch.TestAdapter
                 return; // Done no further tests to run.
             }
             var listOfTestCases = remainingTests.Aggregate("", (acc,test)=> acc + test.DisplayName + Environment.NewLine);
+#if DEBUG
+            frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Remaining Tests: {listOfTestCases}");
+#endif
 
             // Use the directory of the executable as the working directory.
             var CatchExe = remainingTests.First().Source;
@@ -128,7 +131,7 @@ namespace Catch.TestAdapter
                 {
                     listOfSections += $" -c \"{n}\"";
                 }
-                string args = $"-r xml --durations yes \"{sectionNames.First()}\" {listOfSections}";
+                string args = $"-r xml --durations yes \"{sectionNames.First()}\"{listOfSections}";
                 var output_text = ProcessRunner.RunProcess(frameworkHandle, CatchExe, args, workingDirectory, isBeingDebugged);
 #if DEBUG
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Call: {args}");
@@ -216,8 +219,13 @@ namespace Catch.TestAdapter
             if( element.Result != null )
                 testResult.Duration = TimeSpan.FromSeconds(Double.Parse(element.Result.Duration, CultureInfo.InvariantCulture)); 
             var testCase = testResult.TestCase;
-            var testCaseSection = testCase.GetPropertyValue(Section)?? "";
-            if ( name != testResult.TestCase.DisplayName && testCaseSection.ToString() != name)
+#if DEBUG
+            var testCaseSection = testCase.GetPropertyValue(Section) ?? "";
+            frameworkHandle.SendMessage(TestMessageLevel.Informational,
+                $"Handle TestCase Element={name} FQN={testCase.FullyQualifiedName} DisplayName={testCase.DisplayName} Section={testCaseSection} ID={testCase.Id}");
+#endif
+            var Id = EqtHash.GuidFromString(testCase.FullyQualifiedName + testResult.TestCase.ExecutorUri + testResult.TestCase.Source + name);
+            if (testCase.Id != Id)
             {
                 // This is a testcase which hasn't run before. It is really a new one, so create it.
                 testCase = new TestCase(testCase.FullyQualifiedName, testResult.TestCase.ExecutorUri, testResult.TestCase.Source);
@@ -227,9 +235,11 @@ namespace Catch.TestAdapter
                 testCase.Source = testResult.TestCase.Source;
                 testCase.Traits.Concat( testResult.TestCase.Traits );
                 testCase.Id = EqtHash.GuidFromString(testCase.FullyQualifiedName + testResult.TestCase.ExecutorUri + testResult.TestCase.Source + name);
-                testCase.SetPropertyValue(Section, name);
+                if(name.Contains('/'))
+                    testCase.SetPropertyValue(Section, name);
 #if DEBUG
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Found new TestCase {name} ID={testCase.Id}");
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, 
+                    $"Found new TestCase FQN={testCase.FullyQualifiedName} Name={name} ID={testCase.Id}");
 #endif
             }
 
@@ -257,7 +267,11 @@ namespace Catch.TestAdapter
             var testCaseSerializer = new XmlSerializer(typeof(Catch.TestAdapter.Tests.TestCase));
             try
             {
-                var reader = XmlReader.Create(stream);
+                XmlReaderSettings settings = new XmlReaderSettings();
+                settings.IgnoreComments = true;
+                settings.IgnoreProcessingInstructions = true;
+                settings.IgnoreWhitespace = true;
+                var reader = XmlReader.Create(stream, settings);
                 while (reader.Read())
                 {
                     if (reader.Depth != 2 || reader.Name != "TestCase")
@@ -271,9 +285,13 @@ namespace Catch.TestAdapter
                     results.Clear();
                     TryGetFailure(xmlResult, testResult, "");
                     var specificTest = results.Where((test_result) => test_result.TestCase.Id == test.Id);
-                    if( specificTest.Count() == 1 && test.DisplayName != test.FullyQualifiedName)
+                    if(specificTest.Count() == 1 && test.DisplayName != test.FullyQualifiedName)
                     {
                         var r = specificTest.First();
+#if DEBUG
+                        frameworkHandle.SendMessage(TestMessageLevel.Informational,
+                            $"Report special TestCase FQN={r.TestCase.FullyQualifiedName} DisplayName={r.TestCase.DisplayName} ID={r.TestCase.Id}");
+#endif
                         frameworkHandle.RecordStart(r.TestCase);
                         frameworkHandle.RecordResult(r);
                         frameworkHandle.RecordEnd(r.TestCase, r.Outcome);
@@ -282,6 +300,10 @@ namespace Catch.TestAdapter
                     {
                         foreach (var r in results)
                         {
+#if DEBUG
+                            frameworkHandle.SendMessage(TestMessageLevel.Informational,
+                                $"Report TestCase FQN={r.TestCase.FullyQualifiedName} DisplayName={r.TestCase.DisplayName} ID={r.TestCase.Id}");
+#endif
                             frameworkHandle.RecordStart(r.TestCase);
                             frameworkHandle.RecordResult(r);
                             frameworkHandle.RecordEnd(r.TestCase, r.Outcome);
