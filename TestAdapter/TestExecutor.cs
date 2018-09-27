@@ -78,31 +78,35 @@ namespace Catch.TestAdapter
             {
                 return; // Done no further tests to run.
             }
-            var listOfTestCases = remainingTests.Aggregate("", (acc,test)=> acc + test.DisplayName + Environment.NewLine);
-#if DEBUG
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Remaining Tests: {listOfTestCases}");
-#endif
 
             // Use the directory of the executable as the working directory.
-            var CatchExe = remainingTests.First().Source;
-            string workingDirectory = System.IO.Path.GetDirectoryName(CatchExe);
-            if (workingDirectory == "")
-                workingDirectory = ".";
-            // Write them to the input file for Catch runner
-            const string caseFile = "test.cases";
-            System.IO.File.WriteAllText(workingDirectory + System.IO.Path.DirectorySeparatorChar + caseFile, listOfTestCases);
+            var listOfExes = remainingTests.Select(t => t.Source).Distinct();
+            foreach(var CatchExe in listOfExes)
+            {
 
-            // Execute the tests
-            string arguments = "-r xml --durations yes --input-file=" + caseFile ;
-            var output_text = ProcessRunner.RunProcess(frameworkHandle, CatchExe, arguments, workingDirectory, runContext.IsBeingDebugged);
+                var listOfTestCases = remainingTests.Aggregate("", (acc, test) => acc + test.DisplayName + Environment.NewLine);
+#if DEBUG
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Remaining Tests: {listOfTestCases}");
+#endif
+                string workingDirectory = System.IO.Path.GetDirectoryName(CatchExe);
+                if (workingDirectory == "")
+                    workingDirectory = ".";
+                // Write them to the input file for Catch runner
+                const string caseFile = "test.cases";
+                System.IO.File.WriteAllText(workingDirectory + System.IO.Path.DirectorySeparatorChar + caseFile, listOfTestCases);
 
-            timer.Stop();
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
+                // Execute the tests
+                string arguments = "-r xml --durations yes --input-file=" + caseFile ;
+                var output_text = ProcessRunner.RunProcess(frameworkHandle, CatchExe, arguments, workingDirectory, runContext.IsBeingDebugged);
 
-            ComposeResults(output_text, remainingTests.ToList(), frameworkHandle);
+                timer.Stop();
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
 
-            // Remove the temporary input file.
-            System.IO.File.Delete(caseFile);
+                ComposeResults(output_text, remainingTests.ToList(), frameworkHandle);
+
+                // Remove the temporary input file.
+                System.IO.File.Delete(caseFile);
+            }
         }
 
         /// <summary>
@@ -148,10 +152,10 @@ namespace Catch.TestAdapter
         }
 
         /// <summary>
-        /// TBD
+        /// Constructs a test result (messages and stack trace) from the given Expressions.
         /// </summary>
-        /// <param name="Expresions"></param>
-        /// <param name="testResult"></param>
+        /// <param name="Expresions">Catch expressions</param>
+        /// <param name="testResult">Test result of the expressions</param>
         private int ConstructResult(Tests.Expression[] Expresions, TestResult testResult)
         {
             int i = 0;
@@ -214,12 +218,12 @@ namespace Catch.TestAdapter
         }
 
         /// <summary>
-        /// TBD
+        /// Extracts the test results from the Catch test cases.
         /// </summary>
-        /// <param name="element"></param>
-        /// <param name="testResult"></param>
-        /// <param name="name"></param>
-        void TryGetFailure(Tests.TestCase element, TestResult testResult, string name)
+        /// <param name="element">Catch test case element</param>
+        /// <param name="testResult">Current test result</param>
+        /// <param name="name">Constructed name (including section names)</param>
+        private void TryGetFailure(Tests.TestCase element, TestResult testResult, string name)
         {
             name += element.Name;
             if( element.Result != null )
@@ -263,9 +267,9 @@ namespace Catch.TestAdapter
         /// Reports all results from the XML output to the framework.
         /// </summary>
         /// <param name="output_text">The text lines of the output</param>
-        /// <param name="tests">List of tests from the discoverer</param>
+        /// <param name="vsTests">List of tests from the discoverer/TestExplorer</param>
         /// <param name="frameworkHandle"></param>
-        protected virtual void ComposeResults(IList<string> output_text, IList<TestCase> tests, IFrameworkHandle frameworkHandle)
+        protected virtual void ComposeResults(IList<string> output_text, IList<TestCase> vsTests, IFrameworkHandle frameworkHandle)
         {
             this.frameworkHandle = frameworkHandle;
             var xmlresult = string.Join("", output_text);
@@ -286,7 +290,7 @@ namespace Catch.TestAdapter
                     var xmlResult = (Tests.TestCase)testCaseSerializer.Deserialize(reader.ReadSubtree());
 
                     // Find the matching test case
-                    var test = tests.Where((test_case) => test_case.FullyQualifiedName == xmlResult.Name).First();
+                    var test = vsTests.Where((test_case) => test_case.FullyQualifiedName == xmlResult.Name).First();
                     var testResult = new TestResult(test);
                     results.Clear();
                     TryGetFailure(xmlResult, testResult, "");
@@ -317,14 +321,14 @@ namespace Catch.TestAdapter
                     }
 
                     // And remove the test from the list of outstanding tests
-                    tests.Remove(test);
+                    vsTests.Remove(test);
                 }
             }
             catch (InvalidOperationException ex)
             {
-                if (tests.Count != 0)
+                if (vsTests.Count != 0)
                 {
-                    frameworkHandle.SendMessage(TestMessageLevel.Error, $"Running test {tests.First().Source}, exception in adapter: {ex}");
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, $"Running test {vsTests.First().Source}, exception in adapter: {ex}");
                     frameworkHandle.SendMessage(TestMessageLevel.Error, "  Test output, all remaining test cases marked as inconclusive: ");
                     foreach (var s in output_text)
                     {
@@ -332,7 +336,7 @@ namespace Catch.TestAdapter
                     }
                     frameworkHandle.SendMessage(TestMessageLevel.Error, "===============================");
 
-                    foreach (var missingTest in tests)
+                    foreach (var missingTest in vsTests)
                     {
                         var testResult = new TestResult(missingTest)
                         {
