@@ -17,8 +17,11 @@ Use the latest [CatchTestAdapter.vsix](https://github.com/xkbeyer/CatchTestAdapt
 - Needs Catch 2.4.0 regarding selective running a scenario subsection due to changes in white spaces.
 
 ### Test
-The Adapter is tested against the Solution in [CatchUnitTestRef](https://github.com/xkbeyer/CatchUnitTestRef) and the [TestAdapterTest](https://github.com/xkbeyer/CatchTestAdapter/tree/master/TestAdapterTest).
-And against the ReferenceProject in this Solution.
+The Adapter is tested against
+- the Solution in [CatchUnitTestRef](https://github.com/xkbeyer/CatchUnitTestRef) 
+- the [TestAdapterTest](https://github.com/xkbeyer/CatchTestAdapter/tree/master/TestAdapterTest).
+- the [ReferenceProjectProject](https://github.com/xkbeyer/CatchTestAdapter/tree/master/TestAdapterTest/ReferenceCatchProject) in this Solution.
+<br>To run the unit tests against the TestAdapter.dll of the solution, the `Local.runsettings` file must be loaded.</br>
 
 ### Settings
 
@@ -49,5 +52,4 @@ Settings closer to the solution take precedence, lists are merged.
 ### TODO
 
 - More tests in ReferenceCatchProject (may be combined with the CatchUnitTestRef test repo).
-- Test with VS2015.
 - May be an option page to set some Catch test runner arguments.
