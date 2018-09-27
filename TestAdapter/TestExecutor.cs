@@ -5,7 +5,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System.Xml;
-using System.IO;
 using System.Globalization;
 using System.Diagnostics;
 
@@ -129,7 +128,14 @@ namespace Catch.TestAdapter
                 string listOfSections = "";
                 foreach (var n in sectionNames.Skip(1))
                 {
-                    listOfSections += $" -c \"{n}\"";
+                    string name = n;
+                    if (n.Contains("Given"))
+                        name = "    " + n;
+                    if (n.Contains("And"))
+                        name = "      " + n;
+                    if (n.Contains("When") || n.Contains("Then"))
+                        name = "     " + n;
+                    listOfSections += $" -c \"{name}\"";
                 }
                 string args = $"-r xml --durations yes \"{sectionNames.First()}\"{listOfSections}";
                 var output_text = ProcessRunner.RunProcess(frameworkHandle, CatchExe, args, workingDirectory, isBeingDebugged);

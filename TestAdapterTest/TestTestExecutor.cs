@@ -434,5 +434,33 @@ namespace TestAdapterTest
             }
             Assert.AreEqual(prevTestCaseIds.Count(), matches);
         }
+
+        [TestMethod]
+        public void TestRunScenarioThenSection()
+        {
+            // Set up a fake testing context.
+            var framework = new MockFrameworkHandle();
+
+            // Execute all tests.
+            TestExecutor executor = new TestExecutor();
+            executor.RunTests(Common.ReferenceExeList, new MockRunContext(), framework);
+            IList<TestCase> listToRun = new List<TestCase>();
+            foreach (var result in framework.Results)
+            {
+                if (result.DisplayName == "Scenario: vectors can be sized and resized Given: A vector with some items When: more capacity is reserved Then: the capacity changes but not the size")
+                {
+                    listToRun.Add(result.TestCase);
+                    break;
+                }
+            }
+            Assert.AreEqual(1, listToRun.Count());
+            var prevTestCaseId = listToRun.First().Id;
+            framework = new MockFrameworkHandle();
+            executor.RunTests(listToRun, new MockRunContext(), framework);
+            Assert.AreEqual(1, framework.Results.Count());
+            // Check if we get the same TestCase Id back.
+            var matches = from r in framework.Results where prevTestCaseId == r.TestCase.Id select r.TestCase.Id;
+            Assert.AreEqual(1, matches.Count());
+        }
     }
 }

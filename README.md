@@ -14,9 +14,11 @@ Use the latest [CatchTestAdapter.vsix](https://github.com/xkbeyer/CatchTestAdapt
 - BDD Scenario
 - Traits
 - Tested with Visual Studio Community 2017.
+- Needs Catch 2.4.0 regarding selective running a scenario subsection due to changes in white spaces.
 
 ### Test
 The Adapter is tested against the Solution in [CatchUnitTestRef](https://github.com/xkbeyer/CatchUnitTestRef) and the [TestAdapterTest](https://github.com/xkbeyer/CatchTestAdapter/tree/master/TestAdapterTest).
+And against the ReferenceProject in this Solution.
 
 ### Settings
 
