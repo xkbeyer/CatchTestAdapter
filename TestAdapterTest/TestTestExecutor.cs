@@ -9,11 +9,12 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.IO;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using System.Linq;
 
 namespace TestAdapterTest
 {
     [TestClass]
-    [DeploymentItem( Common.ReferenceExePath )]
+    [DeploymentItem(Common.ReferenceExePath)]
     public class TestTestExecutor
     {
         [TestMethod]
@@ -24,10 +25,10 @@ namespace TestAdapterTest
 
             // Execute all tests.
             TestExecutor executor = new TestExecutor();
-            executor.RunTests( Common.ReferenceExeList, new MockRunContext(), framework );
+            executor.RunTests(Common.ReferenceExeList, new MockRunContext(), framework);
 
             // Make sure we got results for all.
-            Assert.AreEqual( Common.ReferenceTestResultCount, framework.Results.Count );
+            Assert.AreEqual(Common.ReferenceTestResultCount, framework.Results.Count);
         }
 
         [TestMethod]
@@ -36,22 +37,22 @@ namespace TestAdapterTest
             // Copy the reference exe to a path with a space.
             string spaceDir = Directory.GetCurrentDirectory() + "\\C++ Space - Test";
             string spaceExe = spaceDir + "\\Test Space.exe";
-            Directory.CreateDirectory( spaceDir );
-            File.Copy( Common.ReferenceExePath, spaceExe );
+            Directory.CreateDirectory(spaceDir);
+            File.Copy(Common.ReferenceExePath, spaceExe);
 
             // Set up a fake testing context.
             var framework = new MockFrameworkHandle();
 
             // Execute all tests.
             TestExecutor executor = new TestExecutor();
-            executor.RunTests( new List<string>() { spaceExe }, new MockRunContext(), framework );
+            executor.RunTests(new List<string>() { spaceExe }, new MockRunContext(), framework);
 
             // Remove the copy.
-            File.Delete( spaceExe );
-            Directory.Delete( spaceDir, true );
+            File.Delete(spaceExe);
+            Directory.Delete(spaceDir, true);
 
             // Make sure we got results for all.
-            Assert.AreEqual( Common.ReferenceTestResultCount, framework.Results.Count );
+            Assert.AreEqual(Common.ReferenceTestResultCount, framework.Results.Count);
         }
 
         [TestMethod]
@@ -62,22 +63,22 @@ namespace TestAdapterTest
 
             // Execute all tests.
             TestExecutor executor = new TestExecutor();
-            executor.RunTests( Common.ReferenceExeList, new MockRunContext(), framework );
+            executor.RunTests(Common.ReferenceExeList, new MockRunContext(), framework);
 
             // Map the tests by name.
             Dictionary<string, TestResult> resultsByName = new Dictionary<string, TestResult>();
-            foreach( var result in framework.Results )
+            foreach (var result in framework.Results)
             {
-                resultsByName[ result.TestCase.FullyQualifiedName ] = result;
+                resultsByName[result.TestCase.FullyQualifiedName] = result;
             }
 
             // Check that the failure failed and success succeeded.
-            TestResult failure = resultsByName[ "Has failure" ];
-            Assert.AreEqual( TestOutcome.Failed, failure.Outcome );
-            Assert.IsTrue( failure.ErrorStackTrace.Contains( "33" ) ); // Failure line number.
+            TestResult failure = resultsByName["Has failure"];
+            Assert.AreEqual(TestOutcome.Failed, failure.Outcome);
+            Assert.IsTrue(failure.ErrorStackTrace.Contains("33")); // Failure line number.
 
-            TestResult success = resultsByName[ "With tags" ];
-            Assert.AreEqual( TestOutcome.Passed, success.Outcome );
+            TestResult success = resultsByName["With tags"];
+            Assert.AreEqual(TestOutcome.Passed, success.Outcome);
         }
 
         [TestMethod]
@@ -88,19 +89,19 @@ namespace TestAdapterTest
 
             // Execute all tests.
             TestExecutor executor = new TestExecutor();
-            executor.RunTests( Common.ReferenceExeList, new MockRunContext(), framework );
+            executor.RunTests(Common.ReferenceExeList, new MockRunContext(), framework);
 
             // Map the tests by name.
             Dictionary<string, TestResult> resultsByName = new Dictionary<string, TestResult>();
-            foreach ( var result in framework.Results )
+            foreach (var result in framework.Results)
             {
-                resultsByName[ result.TestCase.FullyQualifiedName ] = result;
+                resultsByName[result.TestCase.FullyQualifiedName] = result;
             }
 
             // Check that the test with a forced failure has the user-given message in the output.
-            TestResult forcedFailure = resultsByName[ "Has forced failure" ];
-            Assert.AreEqual( TestOutcome.Failed, forcedFailure.Outcome );
-            Assert.IsTrue( forcedFailure.ErrorMessage.Contains( "This message should be in the failure report." ) );
+            TestResult forcedFailure = resultsByName["Has forced failure"];
+            Assert.AreEqual(TestOutcome.Failed, forcedFailure.Outcome);
+            Assert.IsTrue(forcedFailure.ErrorMessage.Contains("This message should be in the failure report."));
         }
 
         [TestMethod]
@@ -210,7 +211,7 @@ namespace TestAdapterTest
             tests.Add(new TestCase("Last test case", new Uri(TestExecutor.ExecutorUriString), "ReferenceCatchProject") { CodeFilePath = "ReferenceCatchProject\testrunnertest.cpp", LineNumber = 54 });
             executor.MockComposeResults(xml_output, tests, framework);
             Assert.AreEqual(6, framework.Results.Count);
-            for(int i = 0; i < 3; ++i)
+            for (int i = 0; i < 3; ++i)
             {
                 Assert.AreNotEqual(TestOutcome.None, framework.Results[i].Outcome);
             }
@@ -291,7 +292,7 @@ namespace TestAdapterTest
         }
 
         [TestMethod]
-        public void TestSingleTestCaseAndOneSection()
+        public void TestRunSingleTestCaseContainingOneSection()
         {
             // Set up a fake testing context.
             var framework = new MockFrameworkHandle();
@@ -306,19 +307,18 @@ namespace TestAdapterTest
                 LineNumber = 31,
                 Source = Common.ReferenceExePath
             };
-            test.Id = EqtHash.GuidFromString(test.FullyQualifiedName+test.ExecutorUri+test.Source+"Has failure/Second fails");
+            test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Has failure/Second fails");
             test.Traits.Add(new Trait("tag", null));
             test.SetPropertyValue(TestExecutor.Section, "Has failure/Second fails");
             testCases.Add(test);
             executor.RunTests(testCases, new MockRunContext(), framework);
 
-            // Make sure we got results for all.
             Assert.AreEqual(1, framework.Results.Count);
             Assert.AreEqual(TestOutcome.Failed, framework.Results[0].Outcome);
         }
 
         [TestMethod]
-        public void TestTestCaseAndSection()
+        public void TestRunTwoSectionsOfOneTestCase()
         {
             // Set up a fake testing context.
             var framework = new MockFrameworkHandle();
@@ -355,14 +355,13 @@ namespace TestAdapterTest
 
             executor.RunTests(testCases, new MockRunContext(), framework);
 
-            // Make sure we got results for all.
             Assert.AreEqual(2, framework.Results.Count);
             Assert.AreEqual(TestOutcome.Passed, framework.Results[0].Outcome);
             Assert.AreEqual(TestOutcome.Failed, framework.Results[1].Outcome);
         }
 
         [TestMethod]
-        public void TestTestCaseAndTestCaseSection()
+        public void TestRunOneTestCaseAndOneSectionOfAnotherTestCase()
         {
             // Set up a fake testing context.
             var framework = new MockFrameworkHandle();
