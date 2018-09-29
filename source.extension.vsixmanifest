@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="CatchTestAdapter.xkBeyer.f56db3ea-257e-4f65-a52c-a6160aa8e329" Version="1.4.3" Language="en-US" Publisher="xkbeyer" />
+        <Identity Id="CatchTestAdapter.xkBeyer.f56db3ea-257e-4f65-a52c-a6160aa8e329" Version="1.5.0" Language="en-US" Publisher="xkbeyer" />
         <DisplayName>CatchTestAdapter</DisplayName>
         <Description xml:space="preserve">Test Adapter for the Catch2 C++ Unit Test Framework</Description>
         <MoreInfo>https://github.com/xkbeyer/CatchTestAdapter</MoreInfo>
