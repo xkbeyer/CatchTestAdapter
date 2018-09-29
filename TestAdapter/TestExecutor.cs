@@ -234,7 +234,7 @@ namespace Catch.TestAdapter
             frameworkHandle.SendMessage(TestMessageLevel.Informational,
                 $"Handle TestCase Element={name} FQN={testCase.FullyQualifiedName} DisplayName={testCase.DisplayName} Section={testCaseSection} ID={testCase.Id}");
 #endif
-            var Id = EqtHash.GuidFromString(testCase.FullyQualifiedName + testResult.TestCase.ExecutorUri + testResult.TestCase.Source + name);
+            var Id = EqtHash.GuidFromString(testResult.TestCase.ExecutorUri + testResult.TestCase.Source + testCase.FullyQualifiedName + name);
             if (testCase.Id != Id)
             {
                 // This is a testcase which hasn't run before. It is really a new one, so create it.
@@ -244,7 +244,7 @@ namespace Catch.TestAdapter
                 testCase.LineNumber = testResult.TestCase.LineNumber;
                 testCase.Source = testResult.TestCase.Source;
                 testCase.Traits.Concat( testResult.TestCase.Traits );
-                testCase.Id = EqtHash.GuidFromString(testCase.FullyQualifiedName + testResult.TestCase.ExecutorUri + testResult.TestCase.Source + name);
+                testCase.Id = Id;
                 if(name.Contains('/'))
                     testCase.SetPropertyValue(Section, name);
 #if DEBUG

@@ -307,7 +307,7 @@ namespace TestAdapterTest
                 LineNumber = 31,
                 Source = Common.ReferenceExePath
             };
-            test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Has failure/Second fails");
+            test.Id = EqtHash.GuidFromString(test.ExecutorUri + test.Source + test.FullyQualifiedName + "Has failure/Second fails");
             test.Traits.Add(new Trait("tag", null));
             test.SetPropertyValue(TestExecutor.Section, "Has failure/Second fails");
             testCases.Add(test);
@@ -334,7 +334,7 @@ namespace TestAdapterTest
                     LineNumber = 26,
                     Source = Common.ReferenceExePath
                 };
-                test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Has failure/First works");
+                test.Id = EqtHash.GuidFromString(test.ExecutorUri + test.Source + test.FullyQualifiedName + "Has failure/First works");
                 test.Traits.Add(new Trait("tag", null));
                 test.SetPropertyValue(TestExecutor.Section, "Has failure/First works");
                 testCases.Add(test);
@@ -347,7 +347,7 @@ namespace TestAdapterTest
                     LineNumber = 31,
                     Source = Common.ReferenceExePath
                 };
-                test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Has failure/Second fails");
+                test.Id = EqtHash.GuidFromString(test.ExecutorUri + test.Source + test.FullyQualifiedName + "Has failure/Second fails");
                 test.Traits.Add(new Trait("tag", null));
                 test.SetPropertyValue(TestExecutor.Section, "Has failure/Second fails");
                 testCases.Add(test);
@@ -377,7 +377,7 @@ namespace TestAdapterTest
                     LineNumber = 51,
                     Source = Common.ReferenceExePath
                 };
-                test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Info");
+                test.Id = EqtHash.GuidFromString(test.ExecutorUri + test.Source + test.FullyQualifiedName + "Info");
                 test.Traits.Add(new Trait("Logging", null));
                 testCases.Add(test);
             }
@@ -389,7 +389,7 @@ namespace TestAdapterTest
                     LineNumber = 31,
                     Source = Common.ReferenceExePath
                 };
-                test.Id = EqtHash.GuidFromString(test.FullyQualifiedName + test.ExecutorUri + test.Source + "Has failure/Second fails");
+                test.Id = EqtHash.GuidFromString(test.ExecutorUri + test.Source + test.FullyQualifiedName + "Has failure/Second fails");
                 test.Traits.Add(new Trait("tag", null));
                 test.SetPropertyValue(TestExecutor.Section, "Has failure/Second fails");
                 testCases.Add(test);
