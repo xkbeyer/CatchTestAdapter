@@ -175,13 +175,15 @@ namespace Catch.TestAdapter
         
         private void CreateResult(Tests.TestCase element, TestResult testResult, TestCase testCase, string name)
         {
-            var subResult = new TestResult(testCase);
-            subResult.Outcome = testResult.Outcome;
-            subResult.DisplayName = testCase.DisplayName;
-            subResult.ErrorMessage = $"{element.Name}{Environment.NewLine}";
-            subResult.ErrorStackTrace = "";
-
-
+            var subResult = new TestResult(testCase)
+            {
+                Outcome = testResult.Outcome,
+                DisplayName = testCase.DisplayName,
+                ErrorMessage = $"{element.Name}{Environment.NewLine}",
+                ErrorStackTrace = "",
+                Duration = testResult.Duration
+            };
+            
             int i = ConstructResult(element.Expressions, subResult);
 
             foreach (var s in (element.Warning ?? new string[] { }))
