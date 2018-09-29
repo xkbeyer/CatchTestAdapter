@@ -128,7 +128,8 @@ namespace Catch.TestAdapter
             TestCase test = new TestCase(name, new Uri(TestExecutor.ExecutorUriString), exeName)
             {
                 CodeFilePath = path,
-                LineNumber = lineNumber
+                LineNumber = lineNumber,
+                DisplayName = name
             };
 
             // Turn tags to traits.
