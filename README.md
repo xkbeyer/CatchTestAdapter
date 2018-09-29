@@ -4,24 +4,23 @@
 A Visual Studio Extension to run [Catch2](https://github.com/catchorg/Catch2) unit tests within the Visual Studio TestExplorer. 
 
 ### Installation
-Use the latest [CatchTestAdapter.vsix](https://github.com/xkbeyer/CatchTestAdapter/releases/latest). 
+Use the latest [CatchTestAdapter.vsix](https://github.com/xkbeyer/CatchTestAdapter/releases/latest).
+It can be installed by double clicking on the downloaded file.
 
 ### Status
-- Test cases are shown after discovery process. 
-- Test result are shown.
-- Stack trace link to the source line works now. 
-- Section
-- BDD Scenario
-- Traits
+- Test cases are shown after discovery process.
+- After RunAll test result of all `SECTION` (incl. `SCENARIO`) are shown. Sections are grouped below the `TEST_CASE` entry.
+- Stack trace link to the source line.
+- Catch2 TAGS are implemented as Traits.
 - Tested with Visual Studio Community 2017.
 - Needs Catch 2.4.0 regarding selective running a scenario subsection due to changes in white spaces.
 
-### Test
-The Adapter is tested against
-- the Solution in [CatchUnitTestRef](https://github.com/xkbeyer/CatchUnitTestRef) 
-- the [TestAdapterTest](https://github.com/xkbeyer/CatchTestAdapter/tree/master/TestAdapterTest).
-- the [ReferenceProjectProject](https://github.com/xkbeyer/CatchTestAdapter/tree/master/TestAdapterTest/ReferenceCatchProject) in this Solution.
-<br>To run the unit tests against the TestAdapter.dll of the solution, the `Local.runsettings` file must be loaded.</br>
+### Testing
+To run the unit tests against the `CatchTestAdapter.dll` of the solution, the `Local.runsettings` file must be loaded.
+The `TestAdaptersPaths` should be adapted to point to the Solution directory.
+```
+<TestAdaptersPaths>c:\Path\to\the\Solution\bin\Debug</TestAdaptersPaths> 
+```
 
 ### Settings
 
@@ -50,6 +49,5 @@ Settings closer to the solution take precedence, lists are merged.
 ```
 
 ### TODO
-
-- More tests in ReferenceCatchProject (may be combined with the CatchUnitTestRef test repo).
-- May be an option page to set some Catch test runner arguments.
+- More documentation with examples.
+- May be an option page to set some Catch2 test runner arguments.
