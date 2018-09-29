@@ -12,6 +12,7 @@ namespace TestAdapterTest.Mocks
         public IList<TestResult> Results { get; } = new List<TestResult>();
 
         // A record of a message sent during the test run.
+        [System.Diagnostics.DebuggerDisplay("{Content}")]
         public struct TestMessage {
             public TestMessageLevel Level;
             public string Content;
