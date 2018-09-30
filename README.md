@@ -1,5 +1,5 @@
+[![Github Releases](https://img.shields.io/github/release/xkbeyer/CatchTestAdapter/all.svg?label=pre-release)](https://github.com/xkbeyer/CatchTestAdapter/releases)
 [![Github Releases](https://img.shields.io/github/release/xkbeyer/CatchTestAdapter.svg)](https://github.com/xkbeyer/CatchTestAdapter/releases)
-
 # CatchTestAdapter
 A Visual Studio Extension to run [Catch2](https://github.com/catchorg/Catch2) unit tests within the Visual Studio TestExplorer. 
 
