@@ -12,7 +12,7 @@ It can be installed by double clicking on the downloaded file.
 - After RunAll test result of all `SECTION` (incl. `SCENARIO`) are shown. Sections are grouped below the `TEST_CASE` entry.
 - Stack trace link to the source line.
 - Catch2 TAGS are implemented as Traits.
-- Tested with Visual Studio Community 2017.
+- Tested with Visual Studio Community 2017 and 2019.
 - Needs Catch 2.4.0 regarding selective running a scenario subsection due to changes in white spaces.
 
 ### Testing
