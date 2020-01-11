@@ -7,13 +7,22 @@ A Visual Studio Extension to run [Catch2](https://github.com/catchorg/Catch2) un
 Use the latest [CatchTestAdapter.vsix](https://github.com/xkbeyer/CatchTestAdapter/releases/latest).
 It can be installed by double clicking on the downloaded file.
 
+### Visual Studio Compatibility
+v1.6.x: Visual Studio 2019 v16.2 and newer 
+
+Beginning with Visual Studio 2019 v16.2 the CatchTestAdapter 1.5.1 is broken. 
+The new TextExplorer Window doesn't accept new test cases as a sub test case.
+Therefore Catch SECTIONs are no longer shown as test cases after the discovery phase. 
+They are shown as sub results.
+
+v1.5.1: Visual Studio prior v16.2 
+
 ### Status
+  
 - Test cases are shown after discovery process.
-- After RunAll test result of all `SECTION` (incl. `SCENARIO`) are shown. Sections are grouped below the `TEST_CASE` entry.
 - Stack trace link to the source line.
 - Catch2 TAGS are implemented as Traits.
-- Tested with Visual Studio Community 2017 and 2019.
-- Needs Catch 2.4.0 regarding selective running a scenario subsection due to changes in white spaces.
+- SECTION and SCENARIO are shown as sub results.
 
 ### Testing
 To run the unit tests against the `CatchTestAdapter.dll` of the solution, the `Local.runsettings` file must be loaded.
@@ -47,7 +56,3 @@ Settings closer to the solution take precedence, lists are merged.
   </CatchAdapter>
 </RunSettings>
 ```
-
-### TODO
-- More documentation with examples.
-- May be an option page to set some Catch2 test runner arguments.
