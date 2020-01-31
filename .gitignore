@@ -40,3 +40,8 @@ packages/**
 *.cmd
 *.output
 tt
+*.ChildProcessDbgSettings
+/CatchOptions
+/launchSettings.json
+/changelog.md
+/CatchTestAdapter.VsPackage.vsix
