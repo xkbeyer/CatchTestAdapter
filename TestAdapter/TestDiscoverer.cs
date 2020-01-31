@@ -35,7 +35,7 @@ namespace Catch.TestAdapter
                     foreach (var t in testCases)
                     {
                         discoverySink.SendTestCase(t);
-                        logger.SendMessage(TestMessageLevel.Informational, t.DisplayName);
+                        logger.SendMessage(TestMessageLevel.Informational, $"Found TestCase Name={t.DisplayName}");
                     }
                 }
             }

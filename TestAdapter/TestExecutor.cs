@@ -19,7 +19,6 @@ namespace Catch.TestAdapter
     [ExtensionUri(ExecutorUriString)]
     public class TestExecutor : ITestExecutor
     {
-        public static readonly TestProperty Section = TestProperty.Register("TestCase.Section", "Section", typeof(string), typeof(TestCase));
         public const string ExecutorUriString = "executor://CatchTestRunner";
         public static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
         private string SolutionDirectory { get; set; } = "";
@@ -31,6 +30,12 @@ namespace Catch.TestAdapter
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Runs the test of an given executable. This implies to run the discover for these sources.
+        /// </summary>
+        /// <param name="sources">The full qualified name of an executable to run</param>
+        /// <param name="runContext">Test context</param>
+        /// <param name="frameworkHandle">Test frame work handle</param>
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
             // Load settings from the context.
@@ -56,6 +61,12 @@ namespace Catch.TestAdapter
             }
         }
 
+        /// <summary>
+        /// Run all given test cases.
+        /// </summary>
+        /// <param name="testsToRun">List of test cases</param>
+        /// <param name="runContext">Run context</param>
+        /// <param name="frameworkHandle">Test frame work handle</param>
         public void RunTests(IEnumerable<TestCase> testsToRun, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
             SolutionDirectory = runContext.SolutionDirectory;
@@ -65,31 +76,20 @@ namespace Catch.TestAdapter
 #if DEBUG
             frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Run tests :");
             foreach (var t in tests) {
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"\tDisplayName={t.DisplayName} Full={t.FullyQualifiedName} Prop={t.GetPropertyValue(Section)} ID={t.Id}");
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"\tDisplayName={t.DisplayName} Full={t.FullyQualifiedName} ID={t.Id}");
             }
 #endif
             var timer = Stopwatch.StartNew();
 
-            // Find all tests of section results and run them.
-            var testsWithSections = tests.Where((test) => test.GetPropertyValue(Section) != null );
-            RunTestSections(testsWithSections, runContext.IsBeingDebugged);
-
-            // Get and run the remaining test cases.
-            var remainingTests = tests.Except(testsWithSections);
-            if(remainingTests.Count() == 0)
-            {
-                return; // Done no further tests to run.
-            }
-
-            var listOfExes = remainingTests.Select(t => t.Source).Distinct();
+            var listOfExes = tests.Select(t => t.Source).Distinct();
             foreach(var CatchExe in listOfExes)
             {
 
-                var listOfTestCasesOfSource = from test in remainingTests where test.Source == CatchExe select test.DisplayName;
+                var listOfTestCasesOfSource = from test in tests where test.Source == CatchExe select test.DisplayName;
                 var listOfTestCases = listOfTestCasesOfSource.Aggregate("", (acc, name) => acc + name + Environment.NewLine);
 
 #if DEBUG
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"{CatchExe} with Tests:{Environment.NewLine}{listOfTestCases}");
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Run {CatchExe} with Tests:{Environment.NewLine}{listOfTestCases}");
 #endif
                 // Use the directory of the executable as the working directory.
                 string workingDirectory = System.IO.Path.GetDirectoryName(CatchExe);
@@ -106,52 +106,10 @@ namespace Catch.TestAdapter
                 timer.Stop();
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, "Overall time " + timer.Elapsed.ToString());
 
-                ComposeResults(output_text, remainingTests.ToList(), frameworkHandle);
+                ComposeResults(output_text, tests.ToList(), frameworkHandle);
 
                 // Remove the temporary input file.
                 System.IO.File.Delete(caseFile);
-            }
-        }
-
-        /// <summary>
-        /// Calls Catch to run the section of a test.
-        /// Catch can only execute sections via the command line and only sections of one test.
-        /// </summary>
-        /// <param name="testsWithSections">All the test which have sections to be run</param>
-        /// <param name="isBeingDebugged">Is the Catch Runner being debugged?</param>
-        private void RunTestSections(IEnumerable<TestCase> testsWithSections, bool isBeingDebugged)
-        {
-            if (testsWithSections.Count() == 0)
-            {
-                return;
-            }
-            foreach (var test in testsWithSections)
-            {
-                var CatchExe = test.Source;
-                string workingDirectory = System.IO.Path.GetDirectoryName(CatchExe);
-                if (workingDirectory == "")
-                    workingDirectory = ".";
-                var section = test.GetPropertyValue(Section);
-                var sectionNames = section.ToString().Split('/');
-                string listOfSections = "";
-                foreach (var n in sectionNames.Skip(1))
-                {
-                    string name = n;
-                    if (n.Contains("Given"))
-                        name = "    " + n;
-                    if (n.Contains("And"))
-                        name = "      " + n;
-                    if (n.Contains("When") || n.Contains("Then"))
-                        name = "     " + n;
-                    listOfSections += $" -c \"{name}\"";
-                }
-                string args = $"-r xml --durations yes \"{sectionNames.First()}\"{listOfSections}";
-                var output_text = ProcessRunner.RunProcess(frameworkHandle, CatchExe, args, workingDirectory, isBeingDebugged);
-#if DEBUG
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Call: {args}");
-#endif
-                List<TestCase> listOfTests = new List<TestCase> { test };
-                ComposeResults(output_text, listOfTests, frameworkHandle);
             }
         }
 
@@ -221,14 +179,6 @@ namespace Catch.TestAdapter
                 subResult.Outcome = TestOutcome.Failed;
             }
             results.Add(subResult);
-#if DEBUG1
-            frameworkHandle.SendMessage(TestMessageLevel.Informational,
-                $"Created TestResult Name={subResult.DisplayName} element={element.Name} TC={subResult.TestCase.FullyQualifiedName} Error={subResult.ErrorMessage}");
-            foreach (var msg in subResult.Messages)
-            {
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, $"\tMsg={msg.Text}");
-            }
-#endif
         }
 
         /// <summary>
@@ -240,10 +190,6 @@ namespace Catch.TestAdapter
         private void TryGetFailure(Tests.TestCase element, TestCase testCase, string name)
         {
             name += element.Name;
-#if DEBUG1
-            var testCaseSection = testCase.GetPropertyValue(Section) ?? "";
-            frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Handle TestCase Name={name} FQN={testCase.FullyQualifiedName} DisplayName={testCase.DisplayName} Section={testCaseSection} ID={testCase.Id}");
-#endif
             // Try to find the failure from this element.
             CreateResult(element, testCase, name);
             // Try to find the failure from a subsection of this element.
@@ -284,26 +230,12 @@ namespace Catch.TestAdapter
                     var test = vsTests.Where((test_case) => test_case.FullyQualifiedName == xmlResult.Name).First();
                     results.Clear();
                     TryGetFailure(xmlResult, test, "");
-                    var specificTest = results.Where((test_result) => test_result.TestCase.Id == test.Id);
-                    if(specificTest.Count() == 1 && test.DisplayName != test.FullyQualifiedName)
+                    foreach (var r in results)
                     {
-                        var r = specificTest.First();
 #if DEBUG
-                        frameworkHandle.SendMessage(TestMessageLevel.Informational,
-                            $"Report special TestCase FQN={r.TestCase.FullyQualifiedName} DisplayName={r.TestCase.DisplayName} ID={r.TestCase.Id}");
+                        frameworkHandle.SendMessage(TestMessageLevel.Informational, $"Report TestResult {r.DisplayName}");
 #endif
                         frameworkHandle.RecordResult(r);
-                    }
-                    else
-                    {
-                        foreach (var r in results)
-                        {
-#if DEBUG
-                            frameworkHandle.SendMessage(TestMessageLevel.Informational,
-                                $"Report TestResult {r.DisplayName} FQN={r.TestCase.FullyQualifiedName} DisplayName={r.TestCase.DisplayName} ID={r.TestCase.Id}");
-#endif
-                            frameworkHandle.RecordResult(r);
-                        }
                     }
 
                     // And remove the test from the list of outstanding tests
@@ -314,7 +246,7 @@ namespace Catch.TestAdapter
             {
                 if (vsTests.Count != 0)
                 {
-                    frameworkHandle.SendMessage(TestMessageLevel.Error, $"While running test {vsTests.First().Source}, catched exception in adapter: {ex}");
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, $"While running test {vsTests.First().Source}, caught exception in adapter: {ex}");
                     frameworkHandle.SendMessage(TestMessageLevel.Error, "  Test output, all remaining test cases marked as inconclusive: ");
                     foreach (var s in output_text)
                     {
