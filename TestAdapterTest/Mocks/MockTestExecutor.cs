@@ -8,7 +8,7 @@ namespace TestAdapterTest.Mocks
     {
         public void MockComposeResults(IList<string> output_text, IList<TestCase> tests, IFrameworkHandle frameworkHandle)
         {
-            base.ComposeResults(output_text, tests, frameworkHandle);
+            base.ReportResults(output_text, tests, frameworkHandle);
         }
     }
 }
