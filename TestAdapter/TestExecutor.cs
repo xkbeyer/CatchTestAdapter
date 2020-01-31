@@ -140,7 +140,7 @@ namespace Catch.TestAdapter
             var subResult = new TestResult(testCase)
             {
                 DisplayName = name.Replace(".", "\n\t"),
-                ErrorMessage = $"{element.Name}{Environment.NewLine}",
+                ErrorMessage = $"",
                 ErrorStackTrace = "",
             };
             if (element.Result != null)
