@@ -141,9 +141,11 @@ namespace Catch.TestAdapter
         /// </summary>
         /// <param name="element">Element of the Catch test case.</param>
         /// <param name="testCase">Test case from framework.</param>
-        /// <param name="name">Name of the Catch test including section names,</param>
+        /// <param name="name">Name of the Catch test including section names</param>
         private void CreateResult(Tests.TestCase element, TestCase testCase, string name)
         {
+            name += element.Name;
+
             var subResult = new TestResult(testCase)
             {
                 DisplayName = name.Replace(".", "\n\t"),
@@ -179,24 +181,12 @@ namespace Catch.TestAdapter
 
             subResult.Outcome = failedExpressions == 0 ? TestOutcome.Passed : TestOutcome.Failed;
             results.Add(subResult);
-        }
 
-        /// <summary>
-        /// Extracts the test results from the Catch test cases.
-        /// </summary>
-        /// <param name="element">Catch test case element</param>
-        /// <param name="testCase">Current test case</param>
-        /// <param name="name">Constructed name (including section names)</param>
-        private void TryGetFailure(Tests.TestCase element, TestCase testCase, string name)
-        {
-            name += element.Name;
-            // Try to find the failure from this element.
-            CreateResult(element, testCase, name);
             // Try to find the failure from a subsection of this element.
             foreach (var section in element.Sections)
             {
                 // Try to find a failure in this section.
-                TryGetFailure(section, testCase, name + ".");
+                CreateResult(section, testCase, name + ".");
             }
         }
 
@@ -229,7 +219,7 @@ namespace Catch.TestAdapter
                     // Find the matching test case
                     var test = vsTests.Where((test_case) => test_case.FullyQualifiedName == xmlResult.Name).First();
                     results.Clear();
-                    TryGetFailure(xmlResult, test, "");
+                    CreateResult(xmlResult, test, "");
                     foreach (var r in results)
                     {
 #if DEBUG
