@@ -151,11 +151,21 @@ namespace Catch.TestAdapter
                 DisplayName = name.Replace(".", "\n\t"),
                 ErrorMessage = $"",
                 ErrorStackTrace = "",
+                Outcome = TestOutcome.None
             };
+
             if (element.Result != null)
+            {
+                subResult.Outcome = element.Result.Success == "true" ? TestOutcome.Passed : TestOutcome.Failed;
                 subResult.Duration = TimeSpan.FromSeconds(Double.Parse(element.Result.Duration, CultureInfo.InvariantCulture));
+            }
 
             int failedExpressions = ConstructResult(element.Expressions, subResult);
+            // Make sure the outcome is failed if the expressions have failed.
+            if (failedExpressions != 0)
+            {
+                subResult.Outcome = TestOutcome.Failed;
+            }
 
             foreach (var s in (element.Warning ?? new string[] { }))
             {
@@ -179,7 +189,18 @@ namespace Catch.TestAdapter
                 subResult.ErrorStackTrace += $"at #{failedExpressions} - {name}() in {FilePath}:line {LineNumber}{Environment.NewLine}";
             }
 
-            subResult.Outcome = failedExpressions == 0 ? TestOutcome.Passed : TestOutcome.Failed;
+            if( subResult.Outcome == TestOutcome.None )
+            {
+                // Check if the OverallResults is set with an outcome.
+                if (element.Results != null)
+                {
+                    if (Int32.Parse(element.Results.Failures) != 0)
+                        subResult.Outcome = TestOutcome.Failed;
+                    else
+                        subResult.Outcome = TestOutcome.Passed;
+                }
+            }
+
             results.Add(subResult);
 
             // Try to find the failure from a subsection of this element.

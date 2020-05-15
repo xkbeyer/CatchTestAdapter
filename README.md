@@ -1,5 +1,5 @@
-[![Github Releases](https://img.shields.io/github/release/xkbeyer/CatchTestAdapter/all.svg?label=pre-release)](https://github.com/xkbeyer/CatchTestAdapter/releases)
 [![Github Releases](https://img.shields.io/github/release/xkbeyer/CatchTestAdapter.svg)](https://github.com/xkbeyer/CatchTestAdapter/releases)
+[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
 # CatchTestAdapter
 A Visual Studio Extension to run [Catch2](https://github.com/catchorg/Catch2) unit tests within the Visual Studio TestExplorer. 
 
@@ -8,26 +8,25 @@ Use the latest [CatchTestAdapter.vsix](https://github.com/xkbeyer/CatchTestAdapt
 It can be installed by double clicking on the downloaded file.
 
 ### Visual Studio Compatibility
-v1.6.x: Visual Studio 2019 v16.2 and newer 
-
+##### v1.6.x: Works with Visual Studio 2019 v16.2 and newer 
 Beginning with Visual Studio 2019 v16.2 the CatchTestAdapter 1.5.1 is broken. 
-The new TextExplorer Window doesn't accept new test cases as a sub test case.
-Therefore Catch SECTIONs are no longer shown as test cases after the discovery phase. 
-They are shown as sub results.
+The new TestExplorer Window doesn't accept new test cases as a sub test case.
+As a result the Catch2 `SECTION`s are no longer shown as sub test cases after the first run. 
+Now they are shown as sub results of a test case.
 
-v1.5.1: Visual Studio prior v16.2 
+##### v1.5.1: Works with Visual Studio prior to v16.2 
 
 ### Status
   
 - Test cases are shown after discovery process.
 - Stack trace link to the source line.
-- Catch2 TAGS are implemented as Traits.
-- SECTION and SCENARIO are shown as sub results.
+- Catch2 `TAGS` are implemented as Traits.
+- `SECTION` and `SCENARIO` are shown as sub results.
 
 ### Testing
 To run the unit tests against the `CatchTestAdapter.dll` of the solution, the `Local.runsettings` file must be loaded.
 The `TestAdaptersPaths` should be adapted to point to the Solution directory.
-```
+```xml
 <TestAdaptersPaths>c:\Path\to\the\Solution\bin\Debug</TestAdaptersPaths> 
 ```
 

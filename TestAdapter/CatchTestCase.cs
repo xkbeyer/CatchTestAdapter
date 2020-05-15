@@ -42,6 +42,8 @@ namespace Catch.TestAdapter.Tests
         }
         [XmlElement("OverallResult", typeof(OverallResult))]
         public OverallResult Result { get; set; }
+        [XmlElement("OverallResults", typeof(OverallResults), IsNullable = true)]   
+        public OverallResults Results { get; set; }
     }
     public class Failure
     {
@@ -72,6 +74,17 @@ namespace Catch.TestAdapter.Tests
     {
         [XmlAttribute("success")]
         public string Success = "";
+        [XmlAttribute("durationInSeconds")]
+        public string Duration = "";
+    }
+    public class OverallResults
+    {
+        [XmlAttribute("successes")]
+        public string Successes = "";
+        [XmlAttribute("failures")]
+        public string Failures = "";
+        [XmlAttribute("expectedFailures")]
+        public string ExpectedFailures = "";
         [XmlAttribute("durationInSeconds")]
         public string Duration = "";
     }
